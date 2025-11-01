@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Click Game Prototype</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    #startScreen {
+      text-align: center;
+    }
+
+    #startButton {
+      background-color: #4CAF50;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* Game Window */
+    #gameArea {
+      position: relative;
+      width: 800px;
+      height: 500px;
+      background-color: #222;
+      border: 3px solid #555;
+      border-radius: 10px;
+      display: none;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Top menu bar */
+    #menuBar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background-color: #333;
+      border-bottom: 2px solid #555;
+      height: 50px;
+    }
+
+    .menuButton {
+      background-color: #444;
+      border: none;
+      color: white;
+      font-size: 16px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .menuButton:hover {
+      background-color: #555;
+    }
+
+    .circle {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-color: red;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    #score {
+      position: absolute;
+      bottom: 10px;
+      right: 15px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <h1>Click Game Prototype</h1>
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <!-- Game Area -->
+  <div id="gameArea">
+    <!-- Top Menu Bar -->
+    <div id="menuBar">
+      <button class="menuButton">Shop</button>
+      <button class="menuButton">Settings</button>
+      <button class="menuButton">Achievements</button>
+      <button class="menuButton">Stats</button>
+    </div>
+
+    <!-- Score Display -->
+    <div id="score">Points: 0</div>
+  </div>
+
+  <script>
+    const startButton = document.getElementById("startButton");
+    const startScreen = document.getElementById("startScreen");
+    const gameArea = document.getElementById("gameArea");
+    const scoreDisplay = document.getElementById("score");
+    const menuHeight = 50; // height of menu bar
+    let score = 0;
+
+    // Create random circle inside game window, below menu bar
+    function createCircle() {
+      const circle = document.createElement("div");
+      circle.classList.add("circle");
+
+      const rect = gameArea.getBoundingClientRect();
+      const x = Math.random() * (rect.width - 50);
+      const y = Math.random() * (rect.height - 50 - menuHeight) + menuHeight; // keeps below menu
+
+      circle.style.left = `${x}px`;
+      circle.style.top = `${y}px`;
+
+      circle.addEventListener("click", () => {
+        score++;
+        scoreDisplay.textContent = `Points: ${score}`;
+        circle.remove();
+        createCircle();
+      });
+
+      gameArea.appendChild(circle);
+    }
+
+    // Start game
+    startButton.addEventListener("click", () => {
+      startScreen.style.display = "none";
+      gameArea.style.display = "block";
+      score = 0;
+      scoreDisplay.textContent = "Points: 0";
+      createCircle();
+    });
+  </script>
+</body>
+</html>
