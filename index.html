@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Click Game Prototype</title>
   <style>
-    body {
+    body {                                /* Centers everything on the screen */ 
       margin: 0;
       height: 100vh;
       display: flex;
@@ -17,11 +17,11 @@
       overflow: hidden;
     }
 
-    #startScreen {
+    #startScreen {                     /* start screen */ 
       text-align: center;
     }
 
-    #startButton {
+    #startButton {                        /* Very beginning start button */ 
       background-color: #4CAF50;
       border: none;
       padding: 15px 30px;
@@ -31,8 +31,7 @@
       cursor: pointer;
     }
 
-    /* Game Window */
-    #gameArea {
+    #gameArea {                             /* game and menu area */ 
       position: relative;
       width: 800px;
       height: 500px;
@@ -44,17 +43,19 @@
       box-sizing: border-box;
     }
 
-    /* Top menu bar */
-    #menuBar {
+    
+    #menuBar {                          /* aligns the buttons in the menu and styles it  */ 
       display: flex;
       justify-content: space-around;
       align-items: center;
       background-color: #333;
       border-bottom: 2px solid #555;
       height: 50px;
+      z-index: 2;
+      position: relative;
     }
 
-    .menuButton {
+    .menuButton {                            /* styling for the actual buttons */ 
       background-color: #444;
       border: none;
       color: white;
@@ -65,85 +66,148 @@
       transition: background-color 0.2s;
     }
 
-    .menuButton:hover {
+    .menuButton:hover {                   /* more button effects/styling */ 
       background-color: #555;
     }
 
-    .circle {
+    .circle {                               /* the targets styling  */ 
       position: absolute;
-      width: 50px;
-      height: 50px;
+      width: 40px;
+      height: 40px;
       background-color: red;
       border-radius: 50%;
       cursor: pointer;
+      z-index: 1;
     }
 
-    #score {
+    #score {                                /* score styling */ 
       position: absolute;
       bottom: 10px;
       right: 15px;
       font-size: 20px;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-  <!-- Start Screen -->
-  <div id="startScreen">
+  <div id="startScreen">                       <!-- Start screen before the game begins -->
     <h1>Click Game Prototype</h1>
     <button id="startButton">Start Game</button>
   </div>
 
-  <!-- Game Area -->
-  <div id="gameArea">
-    <!-- Top Menu Bar -->
+  <div id="gameArea">                          <!-- Main area of the game and the menu buttons --> 
     <div id="menuBar">
       <button class="menuButton">Shop</button>
       <button class="menuButton">Settings</button>
       <button class="menuButton">Achievements</button>
       <button class="menuButton">Stats</button>
     </div>
-
-    <!-- Score Display -->
     <div id="score">Points: 0</div>
   </div>
 
   <script>
-    const startButton = document.getElementById("startButton");
-    const startScreen = document.getElementById("startScreen");
+    const startButton = document.getElementById("startButton");       // start button is the only one that works rn
+    const startScreen = document.getElementById("startScreen");       // rest is just creating JavaScript variables for the html 
     const gameArea = document.getElementById("gameArea");
     const scoreDisplay = document.getElementById("score");
-    const menuHeight = 50; // height of menu bar
+    const menuHeight = 50;                                   // this is so we dont spawn circles over the menu
     let score = 0;
+    let activeCircles = [];
 
-    // Create random circle inside game window, below menu bar
-    function createCircle() {
-      const circle = document.createElement("div");
-      circle.classList.add("circle");
+    function randomEdgePosition(rect) {
+      const edge = Math.floor(Math.random() * 4);                     // picks an edge for the circles to start on
+      let x, y, dx, dy;
 
-      const rect = gameArea.getBoundingClientRect();
-      const x = Math.random() * (rect.width - 50);
-      const y = Math.random() * (rect.height - 50 - menuHeight) + menuHeight; // keeps below menu
+      switch (edge) {
+        case 0:                                                     // top
+          x = Math.random() * (rect.width - 40);                   // picks a start point from the width but not the very edge    
+          y = menuHeight;                                           // because its the top always starts below the menu
+          dx = (Math.random() - 0.5) * 2;                           // controls the movement on the x axis (it would be boring if the targets always moved in a straight line)        
+          dy = 1;                                                    // controls the movement for the y axis (because this is top it moves down consistently)
+          break;
+        case 1:                                                       // right
+          x = rect.width - 40;                                        // starts on the right but not very edge
+          y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight;           // picks a height from the playable area and then shifts it down 50 pixels (the menu) so it doesnt spawn in the menu
+          dx = -1;                                                              // so we move left
+          dy = (Math.random() - 0.5) * 2;                                       // random amount of vertical movement 
+          break;
+        case 2:                                                           // bottom
+          x = Math.random() * (rect.width - 40);                          // same logic as the top to find random x 
+          y = rect.height - 40;                                           // starts 40 pixels from the bottom 
+          dx = (Math.random() - 0.5) * 2;                                 // random horizontal movement 
+          dy = -1;                                                        // constant vertical movement 
+          break;
+        case 3:                                                             // left
+          x = 0;                                                            // start on the left
+          y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight;   // randon vertical placement 
+          dx = 1;                                                             // constant movement to the right
+          dy = (Math.random() - 0.5) * 2;                                     // random vertical movement 
+          break;
+      }
 
-      circle.style.left = `${x}px`;
-      circle.style.top = `${y}px`;
+                                                    // this normalizes the speed, otherwise the diagonal moving circles would move faster than the ones moving in one direction
+      const speed = 0.8 + Math.random() * 0.8;                  // if you want to change the speed can do it here, the first .8 is the base the second is what it can randomly change by         
+      const length = Math.sqrt(dx * dx + dy * dy);              // finds the total pixel movement from both horizontal and vertical directions using a(x)^2 + b(y)^2 = c^2
+      dx = (dx / length) * speed;                               // Uses the total movement to normalize dx but still adjusts by the slightly random speed 
+      dy = (dy / length) * speed;                               // same as the dx but for dy
 
-      circle.addEventListener("click", () => {
-        score++;
-        scoreDisplay.textContent = `Points: ${score}`;
-        circle.remove();
-        createCircle();
-      });
-
-      gameArea.appendChild(circle);
+      return { x, y, dx, dy };                        // gives the location of the circle and the final speeds they are moving 
     }
 
-    // Start game
-    startButton.addEventListener("click", () => {
-      startScreen.style.display = "none";
-      gameArea.style.display = "block";
-      score = 0;
-      scoreDisplay.textContent = "Points: 0";
-      createCircle();
+    function createMovingCircle() {
+      const circle = document.createElement("div");                     // creates the circle 
+      circle.classList.add("circle");                                   // gives it the CSS styling 
+      const rect = gameArea.getBoundingClientRect();                    // gets the boundaries from gameArea (800 wide, 500 tall)
+      const { x, y, dx, dy } = randomEdgePosition(rect);                // gets the return from randomEdgePoition feeding it the dimensions from "rect"               
+
+      let posX = x;                                               // where is the circle this frame on x axis                 
+      let posY = y;                                               // where is the circle this frame on y axis 
+      circle.style.left = `${posX}px`;                            // draws the circle at the correct frames and translates it into pixels for the CSS
+      circle.style.top = `${posY}px`;                             
+
+      
+      circle.addEventListener("click", () => {              // adds the event for clicking on circles
+        score++;                                                // adds to the score
+        scoreDisplay.textContent = `Points: ${score}`;              // displays the new score
+        circle.remove();                                            // gets rid of the circle once its been clicked 
+        activeCircles = activeCircles.filter(c => c.el !== circle);         // gets rid of the clicked circle from the activeCircles array, more useful if/when we have mutliple circles
+        createMovingCircle();                                               // creates the next circle 
+      });
+
+      gameArea.appendChild(circle);                   // adds the circle to the gameArea so the user can actually see it             
+      activeCircles.push({ el: circle, x: posX, y: posY, dx, dy });     // adds the active circle to the array with the paramteres 
+    }
+
+    function animateCircles() {                                                   
+      const rect = gameArea.getBoundingClientRect();     // gets the dimensions 
+      activeCircles.forEach((c, index) => {               // moves all of the circles in the array
+        c.x += c.dx;                                      // adjusts the x by the dx, giving the movement 
+        c.y += c.dy;                                      // same but for y
+        c.el.style.left = `${c.x}px`;                     // uses the moved x and tranlates it to the CSS 
+        c.el.style.top = `${c.y}px`;                      // same for y 
+
+        if (                                              // check for circles reaching ends of the screen 
+          c.x < -50 ||                                    // the circle hitbox is on the left so allows the circle to move fully over 
+          c.x > rect.width ||                             // checks right wall 
+          c.y < menuHeight - 50 ||                        // checks the top minus the menu
+          c.y > rect.height                               // checks the bottom
+        ) {
+          c.el.remove();                                  // removes the circle element if it collides with the walls 
+          activeCircles.splice(index, 1);                 // removes the circle from the array 
+          createMovingCircle();                           // creates the next circle 
+        }
+      });
+      requestAnimationFrame(animateCircles);                  // calls itself so that the next frame can be produced and the movement is smooth
+    }
+
+    startButton.addEventListener("click", () => {           // click event for the start button 
+      startScreen.style.display = "none";                     // hides the start screen after the buttons clicked
+      gameArea.style.display = "block";                       // shows the gameArea
+      score = 0;                                              // initial score
+      scoreDisplay.textContent = "Points: 0";                 // showing the score
+      activeCircles = [];                                     // resets the array to empty
+      createMovingCircle();                                   // creates the first circle 
+      animateCircles();                                       // starts the animatedCircles loop 
     });
   </script>
 </body>
