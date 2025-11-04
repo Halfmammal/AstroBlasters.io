@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Click Game Prototype</title>
   <style>
-    body {                                /* Centers everything on the screen */ 
+    body {
       margin: 0;
       height: 100vh;
       display: flex;
@@ -17,11 +17,11 @@
       overflow: hidden;
     }
 
-    #startScreen {                     /* start screen */ 
+    #startScreen {
       text-align: center;
     }
 
-    #startButton {                        /* Very beginning start button */ 
+    #startButton {
       background-color: #4CAF50;
       border: none;
       padding: 15px 30px;
@@ -31,7 +31,7 @@
       cursor: pointer;
     }
 
-    #gameArea {                             /* game and menu area */ 
+    #gameArea {
       position: relative;
       width: 800px;
       height: 500px;
@@ -43,8 +43,7 @@
       box-sizing: border-box;
     }
 
-    
-    #menuBar {                          /* aligns the buttons in the menu and styles it  */ 
+    #menuBar {
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -55,7 +54,7 @@
       position: relative;
     }
 
-    .menuButton {                            /* styling for the actual buttons */ 
+    .menuButton {
       background-color: #444;
       border: none;
       color: white;
@@ -66,11 +65,11 @@
       transition: background-color 0.2s;
     }
 
-    .menuButton:hover {                   /* more button effects/styling */ 
+    .menuButton:hover {
       background-color: #555;
     }
 
-    .circle {                               /* the targets styling  */ 
+    .circle {
       position: absolute;
       width: 40px;
       height: 40px;
@@ -80,134 +79,200 @@
       z-index: 1;
     }
 
-    #score {                                /* score styling */ 
+    #score {
       position: absolute;
       bottom: 10px;
       right: 15px;
       font-size: 20px;
       z-index: 2;
     }
+
+    /* === STORE MENU STYLES === */
+    #storeMenu {
+      background-color: #1a1a1a;
+      border: 2px solid #555;
+      border-radius: 8px;
+      margin: 20px;
+      padding: 15px;
+      text-align: center;
+      display: none;
+      z-index: 3;
+      position: relative;
+    }
+
+    .store-section {
+      margin-bottom: 20px;
+    }
+
+    .buyButton {
+      background-color: #333;
+      color: white;
+      border: 1px solid #666;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .buyButton:hover {
+      background-color: #555;
+    }
+
+    #moneyDisplay {
+      position: absolute;
+      bottom: 10px;
+      left: 15px;
+      font-size: 20px;
+      z-index: 2;
+    }
   </style>
 </head>
 <body>
-  <div id="startScreen">                       <!-- Start screen before the game begins -->
+  <div id="startScreen">
     <h1>Click Game Prototype</h1>
     <button id="startButton">Start Game</button>
   </div>
 
-  <div id="gameArea">                          <!-- Main area of the game and the menu buttons --> 
+  <div id="gameArea">
     <div id="menuBar">
       <button class="menuButton">Shop</button>
       <button class="menuButton">Settings</button>
       <button class="menuButton">Achievements</button>
       <button class="menuButton">Stats</button>
     </div>
+
+    <!-- === STORE MENU === -->
+    <div id="storeMenu">
+      <h2>Store Upgrades</h2>
+
+      <div class="store-section">
+        <h3>Weapon Upgrades</h3>
+        <button class="buyButton" data-type="weapon" data-cost="10">Laser Lv1 - $10</button>
+        <button class="buyButton" data-type="weapon" data-cost="20">Laser Lv2 - $20</button>
+        <button class="buyButton" data-type="weapon" data-cost="40">Laser Lv3 - $40</button>
+      </div>
+
+      <div class="store-section">
+        <h3>Scanner Upgrades</h3>
+        <button class="buyButton" data-type="scanner" data-cost="15">Radar Lv1 - $15</button>
+        <button class="buyButton" data-type="scanner" data-cost="30">Radar Lv2 - $30</button>
+        <button class="buyButton" data-type="scanner" data-cost="50">Radar Lv3 - $50</button>
+      </div>
+    </div>
+
     <div id="score">Points: 0</div>
   </div>
 
   <script>
-    const startButton = document.getElementById("startButton");       // start button is the only one that works rn
-    const startScreen = document.getElementById("startScreen");       // rest is just creating JavaScript variables for the html 
+    const startButton = document.getElementById("startButton");
+    const startScreen = document.getElementById("startScreen");
     const gameArea = document.getElementById("gameArea");
     const scoreDisplay = document.getElementById("score");
-    const menuHeight = 50;                                   // this is so we dont spawn circles over the menu
+    const menuHeight = 50;
     let score = 0;
     let activeCircles = [];
 
+    // === STORE ELEMENTS ===
+    const storeMenu = document.getElementById("storeMenu");
+    const shopButton = document.querySelector(".menuButton:nth-child(1)");
+    let money = 100;
+    const moneyDisplay = document.createElement("div");
+    moneyDisplay.id = "moneyDisplay";
+    moneyDisplay.textContent = `Money: $${money}`;
+    gameArea.appendChild(moneyDisplay);
+
+    let upgrades = { weapon: 0, scanner: 0 };
+
+    shopButton.addEventListener("click", () => {
+      const isVisible = storeMenu.style.display === "block";
+      storeMenu.style.display = isVisible ? "none" : "block";
+    });
+
+    document.querySelectorAll(".buyButton").forEach(button => {
+      button.addEventListener("click", () => {
+        const cost = parseInt(button.dataset.cost);
+        const type = button.dataset.type;
+
+        if (money >= cost) {
+          money -= cost;
+          upgrades[type]++;
+          moneyDisplay.textContent = `Money: $${money}`;
+          alert(`Purchased ${type} upgrade! Level: ${upgrades[type]}`);
+        } else {
+          alert("Not enough money!");
+        }
+      });
+    });
+
+    // === GAME FUNCTIONS ===
     function randomEdgePosition(rect) {
-      const edge = Math.floor(Math.random() * 4);                     // picks an edge for the circles to start on
+      const edge = Math.floor(Math.random() * 4);
       let x, y, dx, dy;
 
       switch (edge) {
-        case 0:                                                     // top
-          x = Math.random() * (rect.width - 40);                   // picks a start point from the width but not the very edge    
-          y = menuHeight;                                           // because its the top always starts below the menu
-          dx = (Math.random() - 0.5) * 2;                           // controls the movement on the x axis (it would be boring if the targets always moved in a straight line)        
-          dy = 1;                                                    // controls the movement for the y axis (because this is top it moves down consistently)
-          break;
-        case 1:                                                       // right
-          x = rect.width - 40;                                        // starts on the right but not very edge
-          y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight;           // picks a height from the playable area and then shifts it down 50 pixels (the menu) so it doesnt spawn in the menu
-          dx = -1;                                                              // so we move left
-          dy = (Math.random() - 0.5) * 2;                                       // random amount of vertical movement 
-          break;
-        case 2:                                                           // bottom
-          x = Math.random() * (rect.width - 40);                          // same logic as the top to find random x 
-          y = rect.height - 40;                                           // starts 40 pixels from the bottom 
-          dx = (Math.random() - 0.5) * 2;                                 // random horizontal movement 
-          dy = -1;                                                        // constant vertical movement 
-          break;
-        case 3:                                                             // left
-          x = 0;                                                            // start on the left
-          y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight;   // randon vertical placement 
-          dx = 1;                                                             // constant movement to the right
-          dy = (Math.random() - 0.5) * 2;                                     // random vertical movement 
-          break;
+        case 0: x = Math.random() * (rect.width - 40); y = menuHeight; dx = (Math.random() - 0.5) * 2; dy = 1; break;
+        case 1: x = rect.width - 40; y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight; dx = -1; dy = (Math.random() - 0.5) * 2; break;
+        case 2: x = Math.random() * (rect.width - 40); y = rect.height - 40; dx = (Math.random() - 0.5) * 2; dy = -1; break;
+        case 3: x = 0; y = Math.random() * (rect.height - 40 - menuHeight) + menuHeight; dx = 1; dy = (Math.random() - 0.5) * 2; break;
       }
 
-                                                    // this normalizes the speed, otherwise the diagonal moving circles would move faster than the ones moving in one direction
-      const speed = 0.8 + Math.random() * 0.8;                  // if you want to change the speed can do it here, the first .8 is the base the second is what it can randomly change by         
-      const length = Math.sqrt(dx * dx + dy * dy);              // finds the total pixel movement from both horizontal and vertical directions using a(x)^2 + b(y)^2 = c^2
-      dx = (dx / length) * speed;                               // Uses the total movement to normalize dx but still adjusts by the slightly random speed 
-      dy = (dy / length) * speed;                               // same as the dx but for dy
-
-      return { x, y, dx, dy };                        // gives the location of the circle and the final speeds they are moving 
+      const speed = 0.8 + Math.random() * 0.8;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      dx = (dx / length) * speed;
+      dy = (dy / length) * speed;
+      return { x, y, dx, dy };
     }
 
     function createMovingCircle() {
-      const circle = document.createElement("div");                     // creates the circle 
-      circle.classList.add("circle");                                   // gives it the CSS styling 
-      const rect = gameArea.getBoundingClientRect();                    // gets the boundaries from gameArea (800 wide, 500 tall)
-      const { x, y, dx, dy } = randomEdgePosition(rect);                // gets the return from randomEdgePoition feeding it the dimensions from "rect"               
+      const circle = document.createElement("div");
+      circle.classList.add("circle");
+      const rect = gameArea.getBoundingClientRect();
+      const { x, y, dx, dy } = randomEdgePosition(rect);
 
-      let posX = x;                                               // where is the circle this frame on x axis                 
-      let posY = y;                                               // where is the circle this frame on y axis 
-      circle.style.left = `${posX}px`;                            // draws the circle at the correct frames and translates it into pixels for the CSS
-      circle.style.top = `${posY}px`;                             
+      let posX = x, posY = y;
+      circle.style.left = `${posX}px`;
+      circle.style.top = `${posY}px`;
 
-      
-      circle.addEventListener("click", () => {              // adds the event for clicking on circles
-        score++;                                                // adds to the score
-        scoreDisplay.textContent = `Points: ${score}`;              // displays the new score
-        circle.remove();                                            // gets rid of the circle once its been clicked 
-        activeCircles = activeCircles.filter(c => c.el !== circle);         // gets rid of the clicked circle from the activeCircles array, more useful if/when we have mutliple circles
-        createMovingCircle();                                               // creates the next circle 
+      circle.addEventListener("click", () => {
+        score++;
+        scoreDisplay.textContent = `Points: ${score}`;
+        money += 5; // earn money per hit
+        moneyDisplay.textContent = `Money: $${money}`;
+        circle.remove();
+        activeCircles = activeCircles.filter(c => c.el !== circle);
+        createMovingCircle();
       });
 
-      gameArea.appendChild(circle);                   // adds the circle to the gameArea so the user can actually see it             
-      activeCircles.push({ el: circle, x: posX, y: posY, dx, dy });     // adds the active circle to the array with the paramteres 
+      gameArea.appendChild(circle);
+      activeCircles.push({ el: circle, x: posX, y: posY, dx, dy });
     }
 
-    function animateCircles() {                                                   
-      const rect = gameArea.getBoundingClientRect();     // gets the dimensions 
-      activeCircles.forEach((c, index) => {               // moves all of the circles in the array
-        c.x += c.dx;                                      // adjusts the x by the dx, giving the movement 
-        c.y += c.dy;                                      // same but for y
-        c.el.style.left = `${c.x}px`;                     // uses the moved x and tranlates it to the CSS 
-        c.el.style.top = `${c.y}px`;                      // same for y 
+    function animateCircles() {
+      const rect = gameArea.getBoundingClientRect();
+      activeCircles.forEach((c, index) => {
+        c.x += c.dx;
+        c.y += c.dy;
+        c.el.style.left = `${c.x}px`;
+        c.el.style.top = `${c.y}px`;
 
-        if (                                              // check for circles reaching ends of the screen 
-          c.x < -50 ||                                    // the circle hitbox is on the left so allows the circle to move fully over 
-          c.x > rect.width ||                             // checks right wall 
-          c.y < menuHeight - 50 ||                        // checks the top minus the menu
-          c.y > rect.height                               // checks the bottom
-        ) {
-          c.el.remove();                                  // removes the circle element if it collides with the walls 
-          activeCircles.splice(index, 1);                 // removes the circle from the array 
-          createMovingCircle();                           // creates the next circle 
+        if (c.x < -50 || c.x > rect.width || c.y < menuHeight - 50 || c.y > rect.height) {
+          c.el.remove();
+          activeCircles.splice(index, 1);
+          createMovingCircle();
         }
       });
-      requestAnimationFrame(animateCircles);                  // calls itself so that the next frame can be produced and the movement is smooth
+      requestAnimationFrame(animateCircles);
     }
 
-    startButton.addEventListener("click", () => {           // click event for the start button 
-      startScreen.style.display = "none";                     // hides the start screen after the buttons clicked
-      gameArea.style.display = "block";                       // shows the gameArea
-      score = 0;                                              // initial score
-      scoreDisplay.textContent = "Points: 0";                 // showing the score
-      activeCircles = [];                                     // resets the array to empty
-      createMovingCircle();                                   // creates the first circle 
-      animateCircles();                                       // starts the animatedCircles loop 
+    startButton.addEventListener("click", () => {
+      startScreen.style.display = "none";
+      gameArea.style.display = "block";
+      score = 0;
+      scoreDisplay.textContent = "Points: 0";
+      activeCircles = [];
+      createMovingCircle();
+      animateCircles();
     });
   </script>
 </body>
