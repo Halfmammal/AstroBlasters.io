@@ -79,13 +79,6 @@
       z-index: 1;
     }
 
-    #score {
-      position: absolute;
-      bottom: 10px;
-      right: 15px;
-      font-size: 20px;
-      z-index: 2;
-    }
     
     /* Stats Menu Styles */
     #statsMenu {
@@ -252,16 +245,13 @@
       </div>
     </div>
 
-    <div id="score">Points: 0</div>
   </div>
 
   <script>
     const startButton = document.getElementById("startButton");
     const startScreen = document.getElementById("startScreen");
     const gameArea = document.getElementById("gameArea");
-    const scoreDisplay = document.getElementById("score");
     const menuHeight = 50;
-    let score = 0;
     let activeCircles = [];
 
     // === STORE ELEMENTS ===
@@ -333,12 +323,18 @@ function updateStatsUI(){
 }
 
 let timerInterval = null;
+let asteroidChance = 0;
 
 function startTimer() {
   if (timerInterval) return;
   timerInterval = setInterval(() => {
     secondsPlayed++;
     updateStatsUI();
+    asteroidChance = Math.floor(Math.random() * 4);
+    if (asteroidChance > 2){
+      createMovingCircle();
+    }
+    
   }, 1000);
 }
 
@@ -376,15 +372,12 @@ function startTimer() {
       circle.style.top = `${posY}px`;
 
       circle.addEventListener("click", () => {
-        score++;
-        scoreDisplay.textContent = `Points: ${score}`;
         money += 5; // earn money per hit
         totalMoneyEarned += 5;
         asteroidsDestroyed += 1;
         moneyDisplay.textContent = `Money: $${money}`;
         circle.remove();
         activeCircles = activeCircles.filter(c => c.el !== circle);
-        createMovingCircle();
       });
 
       gameArea.appendChild(circle);
@@ -412,8 +405,6 @@ function startTimer() {
       startTimer();
       startScreen.style.display = "none";
       gameArea.style.display = "block";
-      score = 0;
-      scoreDisplay.textContent = "Points: 0";
       activeCircles = [];
       createMovingCircle();
       animateCircles();
