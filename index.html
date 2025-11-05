@@ -86,9 +86,49 @@
       font-size: 20px;
       z-index: 2;
     }
+    
+    /* Stats Menu Styles */
+    #statsMenu {
+  opacity: .8;
+  background-color: #1a1a1a;
+  border: 2px solid #555;
+  border-radius: 8px;
+  margin: 20px;
+  padding: 15px;
+  text-align: center;
+  display: none;
+  z-index: 3;
+  position: relative;
+}
+
+#statsMenu.grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 15px;
+}
+
+#statsMenu.open {
+  display: grid;
+}
+
+
+    .stat-card{
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(39,39,39,0.2); /* subtle inner tone */
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+    
+
 
     /* === STORE MENU STYLES === */
     #storeMenu {
+      opacity: .8;
       background-color: #1a1a1a;
       border: 2px solid #555;
       border-radius: 8px;
@@ -137,11 +177,62 @@
   <div id="gameArea">
     <div id="menuBar">
       <button class="menuButton">Shop</button>
-      <button class="menuButton">Settings</button>
-      <button class="menuButton">Achievements</button>
       <button class="menuButton">Stats</button>
+      <button class="menuButton">Achievements</button>
+      <button class="menuButton">Settings</button>
     </div>
+    
+    <div id="statsMenu" class="grid">
 
+  <div class="stat-card">
+    <div>Total Money Earned:</div>
+    <div id="totalMoneyEarned">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Money Spent:</div>
+    <div id="moneySpent">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Asteroids Destroyed:</div>
+    <div id="asteroidsDestroyed">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Upgrades Purchased:</div>
+    <div id="upgradesPurchased">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Time Played:</div>
+    <div id="timePlayed">0s</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Ally Count:</div>
+    <div id="allyCount">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Ally Asteroids Destroyed:</div>
+    <div id="allyAsteroidsDestroyed">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Aliens Destroyed:</div>
+    <div id="aliensDestroyed">0</div>
+  </div>
+
+  <div class="stat-card">
+    <div>Total Events:</div>
+    <div id="totalEvents">0</div>
+  </div>
+
+</div>
+
+
+    
     <!-- === STORE MENU === -->
     <div id="storeMenu">
       <h2>Store Upgrades</h2>
@@ -176,7 +267,7 @@
     // === STORE ELEMENTS ===
     const storeMenu = document.getElementById("storeMenu");
     const shopButton = document.querySelector(".menuButton:nth-child(1)");
-    let money = 100;
+    let money = 0;
     const moneyDisplay = document.createElement("div");
     moneyDisplay.id = "moneyDisplay";
     moneyDisplay.textContent = `Money: $${money}`;
@@ -196,6 +287,8 @@
 
         if (money >= cost) {
           money -= cost;
+          moneySpent += cost;
+          upgradesPurchased += 1;
           upgrades[type]++;
           moneyDisplay.textContent = `Money: $${money}`;
           alert(`Purchased ${type} upgrade! Level: ${upgrades[type]}`);
@@ -204,6 +297,54 @@
         }
       });
     });
+    
+    /* Stats Elements*/
+const statsMenu = document.getElementById("statsMenu");
+const statsButton = document.querySelector(".menuButton:nth-child(2)");
+
+statsButton.addEventListener("click", () => {
+  statsMenu.classList.toggle("open");
+});
+
+let totalMoneyEarned = 0;
+let moneySpent = 0;
+let asteroidsDestroyed = 0;
+let upgradesPurchased = 0;
+let secondsPlayed = 0;
+let allyCount = 0;
+let allyAsteroidsDestroyed = 0;
+let aliensDestroyed = 0;
+let totalEvents = 0;
+    
+/* Stats Page Functions*/
+
+function updateStatsUI(){
+  document.getElementById("totalMoneyEarned").textContent = `$${totalMoneyEarned}`;
+  document.getElementById("moneySpent").textContent = `$${moneySpent}`;
+  document.getElementById("asteroidsDestroyed").textContent = asteroidsDestroyed;
+  document.getElementById("upgradesPurchased").textContent = upgradesPurchased;
+  const minutes = Math.floor(secondsPlayed / 60);
+  const seconds = secondsPlayed % 60;
+  document.getElementById("timePlayed").textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  document.getElementById("allyCount").textContent = allyCount;
+  document.getElementById("allyAsteroidsDestroyed").textContent = allyAsteroidsDestroyed;
+  document.getElementById("aliensDestroyed").textContent = aliensDestroyed;
+  document.getElementById("totalEvents").textContent = totalEvents;
+}
+
+let timerInterval = null;
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    secondsPlayed++;
+    updateStatsUI();
+  }, 1000);
+}
+
+
+    
+    
 
     // === GAME FUNCTIONS ===
     function randomEdgePosition(rect) {
@@ -238,6 +379,8 @@
         score++;
         scoreDisplay.textContent = `Points: ${score}`;
         money += 5; // earn money per hit
+        totalMoneyEarned += 5;
+        asteroidsDestroyed += 1;
         moneyDisplay.textContent = `Money: $${money}`;
         circle.remove();
         activeCircles = activeCircles.filter(c => c.el !== circle);
@@ -266,6 +409,7 @@
     }
 
     startButton.addEventListener("click", () => {
+      startTimer();
       startScreen.style.display = "none";
       gameArea.style.display = "block";
       score = 0;
@@ -274,6 +418,9 @@
       createMovingCircle();
       animateCircles();
     });
+    
+    
+    
   </script>
 </body>
 </html>
