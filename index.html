@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Click Game Prototype</title>
+  <title>Click Game Prototype - Achievements & Secrets</title>
   <style>
     body {
       margin: 0;
@@ -79,45 +79,41 @@
       z-index: 1;
     }
 
-    
     /* Stats Menu Styles */
     #statsMenu {
-  opacity: .8;
-  background-color: #1a1a1a;
-  border: 2px solid #555;
-  border-radius: 8px;
-  margin: 20px;
-  padding: 15px;
-  text-align: center;
-  display: none;
-  z-index: 3;
-  position: relative;
-}
+      opacity: .8;
+      background-color: #1a1a1a;
+      border: 2px solid #555;
+      border-radius: 8px;
+      margin: 20px;
+      padding: 15px;
+      text-align: center;
+      display: none;
+      z-index: 3;
+      position: relative;
+    }
 
-#statsMenu.grid {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 15px;
-}
+    #statsMenu.grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 15px;
+    }
 
-#statsMenu.open {
-  display: grid;
-}
-
+    #statsMenu.open {
+      display: grid;
+    }
 
     .stat-card{
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: rgba(39,39,39,0.2); /* subtle inner tone */
-  min-height: 44px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
-}
-    
-
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(39,39,39,0.2);
+      min-height: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+    }
 
     /* === STORE MENU STYLES === */
     #storeMenu {
@@ -159,6 +155,180 @@
       font-size: 20px;
       z-index: 2;
     }
+
+    /* === ACHIEVEMENTS & SECRETS === */
+    #achievementsMenu {
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      right: 20px;
+      bottom: 60px;
+      background: rgba(20,20,20,0.95);
+      border: 2px solid #555;
+      border-radius: 8px;
+      padding: 14px;
+      display: none;
+      z-index: 4;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    #achievementsHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    #achievementsList {
+      position: absolute;
+      top: 48px;
+      left: 14px;
+      bottom: 14px;
+      right: 14px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .achievement-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(39,39,39,0.12);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 72px;
+    }
+
+    .achievement-title {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .achievement-desc {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    .progressBarWrap {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      height: 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg,#7b4,#49f);
+    }
+
+    .claimButton {
+      background: #333;
+      color: white;
+      border: 1px solid #666;
+      padding: 6px 10px;
+      margin-top: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .claimButton:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    /* secrets slide-in */
+    #secretsPanel {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 420px;
+      right: -460px; /* hidden initially off-screen */
+      background: linear-gradient(180deg,#141414,#1e1e1e);
+      border-left: 2px solid #444;
+      padding: 12px;
+      box-sizing: border-box;
+      transition: right 350ms cubic-bezier(.2,.9,.25,1);
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #secretsPanel.open {
+      right: 14px;
+    }
+
+    .secret-card {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: rgba(35,35,35,0.08);
+    }
+
+    .secret-image {
+      width: 64px;
+      height: 48px;
+      border-radius: 6px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #ffd;
+      font-size: 28px;
+      box-shadow: 0 0 12px rgba(255,255,255,0.02) inset;
+    }
+
+    .secret-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .secret-title {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .secret-sub {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .secret-button {
+      background: #333;
+      color: white;
+      border: 1px solid #666;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* small helper for locked state */
+    .locked {
+      filter: blur(0.6px);
+      opacity: 0.9;
+    }
+
+    /* footer for achievements */
+    #achFooter {
+      position: absolute;
+      right: 18px;
+      bottom: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
   </style>
 </head>
 <body>
@@ -174,58 +344,87 @@
       <button class="menuButton">Achievements</button>
       <button class="menuButton">Settings</button>
     </div>
-    
+
+    <!-- === ACHIEVEMENTS -->
+    <div id="achievementsMenu">
+      <div id="achievementsHeader">
+        <div style="font-weight:bold">Achievements</div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <div style="font-size:13px; opacity:.9">Rewards = Money</div>
+          <button id="closeAchievements" class="menuButton" style="padding:6px 10px">Close</button>
+        </div>
+      </div>
+
+      <div id="achievementsList">
+        <!-- cards injected by JS -->
+      </div>
+
+      <div id="achFooter">
+        <button id="viewSecretsBtn" class="menuButton">View Secrets</button>
+      </div>
+
+      <!-- secrets slide-in panel -->
+      <div id="secretsPanel" aria-hidden="true">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-weight:bold">Secrets</div>
+          <button id="closeSecrets" class="menuButton" style="padding:6px 10px">Back</button>
+        </div>
+
+        <div id="secretsList" style="overflow:auto; padding-right:6px;">
+          <!-- secret cards inserted -->
+        </div>
+      </div>
+    </div>
+
     <div id="statsMenu" class="grid">
 
-  <div class="stat-card">
-    <div>Total Money Earned:</div>
-    <div id="totalMoneyEarned">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Total Money Earned:</div>
+        <div id="totalMoneyEarned">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Money Spent:</div>
-    <div id="moneySpent">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Money Spent:</div>
+        <div id="moneySpent">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Asteroids Destroyed:</div>
-    <div id="asteroidsDestroyed">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Asteroids Destroyed:</div>
+        <div id="asteroidsDestroyed">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Upgrades Purchased:</div>
-    <div id="upgradesPurchased">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Upgrades Purchased:</div>
+        <div id="upgradesPurchased">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Time Played:</div>
-    <div id="timePlayed">0s</div>
-  </div>
+      <div class="stat-card">
+        <div>Time Played:</div>
+        <div id="timePlayed">0s</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Ally Count:</div>
-    <div id="allyCount">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Ally Count:</div>
+        <div id="allyCount">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Ally Asteroids Destroyed:</div>
-    <div id="allyAsteroidsDestroyed">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Ally Asteroids Destroyed:</div>
+        <div id="allyAsteroidsDestroyed">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Aliens Destroyed:</div>
-    <div id="aliensDestroyed">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Aliens Destroyed:</div>
+        <div id="aliensDestroyed">0</div>
+      </div>
 
-  <div class="stat-card">
-    <div>Total Events:</div>
-    <div id="totalEvents">0</div>
-  </div>
+      <div class="stat-card">
+        <div>Total Events:</div>
+        <div id="totalEvents">0</div>
+      </div>
 
-</div>
+    </div>
 
-
-    
     <!-- === STORE MENU === -->
     <div id="storeMenu">
       <h2>Store Upgrades</h2>
@@ -282,67 +481,345 @@
           upgrades[type]++;
           moneyDisplay.textContent = `Money: $${money}`;
           alert(`Purchased ${type} upgrade! Level: ${upgrades[type]}`);
+          // stats & events
+          totalEvents++;
+          updateStatsUI();
+          checkAchievements(); // upgrades can unlock achievements
+          maybeUnlockSecret('purchase'); // chance to reveal secrets on purchase
         } else {
           alert("Not enough money!");
         }
       });
     });
-    
+
     /* Stats Elements*/
-const statsMenu = document.getElementById("statsMenu");
-const statsButton = document.querySelector(".menuButton:nth-child(2)");
+    const statsMenu = document.getElementById("statsMenu");
+    const statsButton = document.querySelector(".menuButton:nth-child(2)");
 
-statsButton.addEventListener("click", () => {
-  statsMenu.classList.toggle("open");
-});
+    statsButton.addEventListener("click", () => {
+      statsMenu.classList.toggle("open");
+    });
 
-let totalMoneyEarned = 0;
-let moneySpent = 0;
-let asteroidsDestroyed = 0;
-let upgradesPurchased = 0;
-let secondsPlayed = 0;
-let allyCount = 0;
-let allyAsteroidsDestroyed = 0;
-let aliensDestroyed = 0;
-let totalEvents = 0;
-    
-/* Stats Page Functions*/
+    let totalMoneyEarned = 0;
+    let moneySpent = 0;
+    let asteroidsDestroyed = 0;
+    let upgradesPurchased = 0;
+    let secondsPlayed = 0;
+    let allyCount = 0;
+    let allyAsteroidsDestroyed = 0;
+    let aliensDestroyed = 0;
+    let totalEvents = 0;
 
-function updateStatsUI(){
-  document.getElementById("totalMoneyEarned").textContent = `$${totalMoneyEarned}`;
-  document.getElementById("moneySpent").textContent = `$${moneySpent}`;
-  document.getElementById("asteroidsDestroyed").textContent = asteroidsDestroyed;
-  document.getElementById("upgradesPurchased").textContent = upgradesPurchased;
-  const minutes = Math.floor(secondsPlayed / 60);
-  const seconds = secondsPlayed % 60;
-  document.getElementById("timePlayed").textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  document.getElementById("allyCount").textContent = allyCount;
-  document.getElementById("allyAsteroidsDestroyed").textContent = allyAsteroidsDestroyed;
-  document.getElementById("aliensDestroyed").textContent = aliensDestroyed;
-  document.getElementById("totalEvents").textContent = totalEvents;
-}
+    /* Stats Page Functions*/
 
-let timerInterval = null;
-let asteroidChance = 0;
-
-function startTimer() {
-  if (timerInterval) return;
-  timerInterval = setInterval(() => {
-    secondsPlayed++;
-    updateStatsUI();
-    asteroidChance = Math.floor(Math.random() * 4);
-    if (asteroidChance > 2){
-      createMovingCircle();
+    function updateStatsUI(){
+      document.getElementById("totalMoneyEarned").textContent = `$${totalMoneyEarned}`;
+      document.getElementById("moneySpent").textContent = `$${moneySpent}`;
+      document.getElementById("asteroidsDestroyed").textContent = asteroidsDestroyed;
+      document.getElementById("upgradesPurchased").textContent = upgradesPurchased;
+      const minutes = Math.floor(secondsPlayed / 60);
+      const seconds = secondsPlayed % 60;
+      document.getElementById("timePlayed").textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      document.getElementById("allyCount").textContent = allyCount;
+      document.getElementById("allyAsteroidsDestroyed").textContent = allyAsteroidsDestroyed;
+      document.getElementById("aliensDestroyed").textContent = aliensDestroyed;
+      document.getElementById("totalEvents").textContent = totalEvents;
     }
-    
-  }, 1000);
-}
 
+    let timerInterval = null;
+    let asteroidChance = 0;
 
-    
-    
+    function startTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        secondsPlayed++;
+        updateStatsUI();
+        asteroidChance = Math.floor(Math.random() * 4);
+        if (asteroidChance > 2){
+          createMovingCircle();
+        }
+      }, 1000);
+    }
 
-    // === GAME FUNCTIONS ===
+    // === ACHIEVEMENTS & SECRETS DATA & UI ===
+    const achievementsButton = document.querySelector(".menuButton:nth-child(3)");
+    const achievementsMenu = document.getElementById("achievementsMenu");
+    const achievementsList = document.getElementById("achievementsList");
+    const closeAchievements = document.getElementById("closeAchievements");
+    const viewSecretsBtn = document.getElementById("viewSecretsBtn");
+    const secretsPanel = document.getElementById("secretsPanel");
+    const secretsList = document.getElementById("secretsList");
+    const closeSecrets = document.getElementById("closeSecrets");
+
+    // Define achievements (15). hiddenTitle true means show "??????" until unlocked
+    const achievements = [
+      { id: 'ach1', title: 'Asteroid Rookie', desc: 'Destroy 5 asteroids.', reward: 10, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 5, hiddenTitle: false },
+      { id: 'ach2', title: 'First Blood', desc: 'Destroy your 1st asteroid.', reward: 8, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 1, hiddenTitle: false },
+      { id: 'ach3', title: 'Rock Crusher', desc: 'Destroy 20 asteroids.', reward: 20, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 20, hiddenTitle: false },
+      { id: 'ach4', title: 'Destroyer', desc: 'Destroy 50 asteroids.', reward: 60, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 50, hiddenTitle: true },
+      { id: 'ach5', title: 'Laser Tech', desc: 'Purchase 1 weapon upgrade.', reward: 10, unlocked: false, claimed: false, condition: () => upgrades.weapon >= 1, hiddenTitle: false },
+      { id: 'ach6', title: 'Radar Expert', desc: 'Purchase 1 scanner upgrade.', reward: 10, unlocked: false, claimed: false, condition: () => upgrades.scanner >= 1, hiddenTitle: false },
+      { id: 'ach7', title: 'Engineer', desc: 'Purchase 5 upgrades total.', reward: 25, unlocked: false, claimed: false, condition: () => upgradesPurchased >= 5, hiddenTitle: false },
+      { id: 'ach8', title: 'Collector', desc: 'Earn $100 total.', reward: 25, unlocked: false, claimed: false, condition: () => totalMoneyEarned >= 100, hiddenTitle: false },
+      { id: 'ach9', title: 'Tycoon', desc: 'Earn $500 total.', reward: 50, unlocked: false, claimed: false, condition: () => totalMoneyEarned >= 500, hiddenTitle: true },
+      { id: 'ach10', title: 'Marathon Pilot', desc: 'Play for 5 minutes.', reward: 15, unlocked: false, claimed: false, condition: () => secondsPlayed >= 300, hiddenTitle: false },
+      { id: 'ach11', title: 'Lucky Break', desc: 'Destroy 3 asteroids in under 10 seconds.', reward: 30, unlocked: false, claimed: false, condition: () => false, hiddenTitle: true, // special: handled elsewhere
+            special: { type: 'speed_kill', window: 10, needed: 3 }
+      },
+      { id: 'ach12', title: 'Team Builder', desc: 'Reach 3 allies.', reward: 20, unlocked: false, claimed: false, condition: () => allyCount >= 3, hiddenTitle: false },
+      { id: 'ach13', title: 'Alien Menace', desc: 'Destroy 10 aliens.', reward: 40, unlocked: false, claimed: false, condition: () => aliensDestroyed >= 10, hiddenTitle: true },
+      { id: 'ach14', title: 'Event Hunter', desc: 'Trigger 10 total events.', reward: 30, unlocked: false, claimed: false, condition: () => totalEvents >= 10, hiddenTitle: false },
+      { id: 'ach15', title: 'Completionist', desc: 'Unlock all achievements.', reward: 150, unlocked: false, claimed: false, condition: () => achievements.every(a => a.unlocked), hiddenTitle: true }
+    ];
+
+    // Secrets (10). Start locked, reveal title/image when unlocked.
+    // Using asteroid-themed symbols for images (user requested asteroids)
+    const secrets = [
+      { id: 's1', name: '??????', revealed: false, collected: false, hint: 'First asteroid destroyed', reward: 12, image: '🪨', unlockReason: 'first_asteroid' },
+      { id: 's2', name: '??????', revealed: false, collected: false, hint: 'First upgrade purchased', reward: 15, image: '☄️', unlockReason: 'first_upgrade' },
+      { id: 's3', name: '??????', revealed: false, collected: false, hint: 'Small random discovery', reward: 20, image: '🌑', unlockReason: 'random_hit' },
+      { id: 's4', name: '??????', revealed: false, collected: false, hint: 'Play for 5 minutes', reward: 40, image: '🌠', unlockReason: 'time_played_300' },
+      { id: 's5', name: '??????', revealed: false, collected: false, hint: 'Earn a decent fortune', reward: 50, image: '💠', unlockReason: 'earn_money_500' },
+      { id: 's6', name: '??????', revealed: false, collected: false, hint: 'Rare random event', reward: 80, image: '🌒', unlockReason: 'rare_random' },
+      { id: 's7', name: '??????', revealed: false, collected: false, hint: 'Unlock 5 achievements', reward: 60, image: '🌘', unlockReason: 'achievements_5' },
+      { id: 's8', name: '??????', revealed: false, collected: false, hint: 'Destroy 100 asteroids', reward: 100, image: '🌕', unlockReason: 'asteroids_100' },
+      { id: 's9', name: '??????', revealed: false, collected: false, hint: 'Unlock all secrets', reward: 120, image: '☄️', unlockReason: 'all_secrets' },
+      { id: 's10', name: '??????', revealed: false, collected: false, hint: 'Ultimate completion bonus', reward: 200, image: '💰', unlockReason: 'everything_complete' }
+    ];
+
+    // small rolling window tracker for speed_kill achievement (ach11)
+    let recentKillsTimestamps = [];
+
+    // Render achievements list
+    function renderAchievements(){
+      achievementsList.innerHTML = '';
+      achievements.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'achievement-card';
+        const title = document.createElement('div');
+        title.className = 'achievement-title';
+        const desc = document.createElement('div');
+        desc.className = 'achievement-desc';
+
+        // locked vs unlocked UI
+        if (!a.unlocked && a.hiddenTitle) {
+          title.textContent = '??????';
+          desc.textContent = 'Unlock to reveal this achievement.';
+          card.classList.add('locked');
+        } else {
+          title.textContent = a.title;
+          desc.textContent = a.desc;
+        }
+
+        // progress bar if applicable (simple heuristic)
+        const progressWrap = document.createElement('div');
+        progressWrap.className = 'progressBarWrap';
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progressBar';
+
+        // compute progress fraction for some common metrics
+        let pct = 0;
+        if (a.id === 'ach1') pct = Math.min(1, asteroidsDestroyed / 5);
+        else if (a.id === 'ach3') pct = Math.min(1, asteroidsDestroyed / 20);
+        else if (a.id === 'ach4') pct = Math.min(1, asteroidsDestroyed / 50);
+        else if (a.id === 'ach8') pct = Math.min(1, totalMoneyEarned / 100);
+        else if (a.id === 'ach9') pct = Math.min(1, totalMoneyEarned / 500);
+        else if (a.id === 'ach7') pct = Math.min(1, upgradesPurchased / 5);
+        else if (a.id === 'ach10') pct = Math.min(1, secondsPlayed / 300);
+        else if (a.id === 'ach14') pct = Math.min(1, totalEvents / 10);
+        else if (a.id === 'ach12') pct = Math.min(1, allyCount / 3);
+        else pct = (a.unlocked ? 1 : 0);
+
+        progressBar.style.width = `${Math.floor(pct * 100)}%`;
+        progressWrap.appendChild(progressBar);
+
+        const statusRow = document.createElement('div');
+        statusRow.style.display = 'flex';
+        statusRow.style.justifyContent = 'space-between';
+        statusRow.style.alignItems = 'center';
+        statusRow.style.marginTop = '8px';
+
+        const rewardText = document.createElement('div');
+        rewardText.style.fontSize = '12px';
+        rewardText.style.opacity = '0.9';
+        rewardText.textContent = `Reward: $${a.reward}`;
+
+        const claimBtn = document.createElement('button');
+        claimBtn.className = 'claimButton';
+        claimBtn.textContent = a.claimed ? 'Claimed' : `Claim ($${a.reward})`;
+        claimBtn.disabled = !a.unlocked || a.claimed;
+        claimBtn.addEventListener('click', () => {
+          if (a.unlocked && !a.claimed) {
+            money += a.reward;
+            totalMoneyEarned += a.reward;
+            a.claimed = true;
+            moneyDisplay.textContent = `Money: $${money}`;
+            updateStatsUI();
+            renderAchievements();
+            // unlocking secrets based on achievements progress
+            maybeUnlockSecret('achievement_unlocked');
+          }
+        });
+
+        card.appendChild(title);
+        card.appendChild(desc);
+        card.appendChild(progressWrap);
+        statusRow.appendChild(rewardText);
+        statusRow.appendChild(claimBtn);
+        card.appendChild(statusRow);
+        achievementsList.appendChild(card);
+      });
+    }
+
+    // Render secrets
+    function renderSecrets(){
+      secretsList.innerHTML = '';
+      secrets.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'secret-card';
+        const img = document.createElement('div');
+        img.className = 'secret-image';
+        img.textContent = s.revealed ? s.image : '???';
+        if (!s.revealed) img.classList.add('locked');
+
+        const text = document.createElement('div');
+        text.className = 'secret-text';
+        const t = document.createElement('div');
+        t.className = 'secret-title';
+        t.textContent = s.revealed ? s.name : '??????';
+        const sub = document.createElement('div');
+        sub.className = 'secret-sub';
+        sub.textContent = s.revealed ? `Discovered: ${s.hint}` : 'Locked secret - discover by playing!';
+        text.appendChild(t);
+        text.appendChild(sub);
+
+        const btn = document.createElement('button');
+        btn.className = 'secret-button';
+        btn.textContent = s.collected ? 'Collected' : (s.revealed ? `Collect ($${s.reward})` : 'Locked');
+        btn.disabled = !s.revealed || s.collected;
+        btn.addEventListener('click', () => {
+          if (s.revealed && !s.collected) {
+            money += s.reward;
+            totalMoneyEarned += s.reward;
+            s.collected = true;
+            moneyDisplay.textContent = `Money: $${money}`;
+            updateStatsUI();
+            renderSecrets();
+            // unlocking chained secrets
+            maybeUnlockSecret('secret_collected');
+          }
+        });
+
+        card.appendChild(img);
+        card.appendChild(text);
+        card.appendChild(btn);
+        secretsList.appendChild(card);
+      });
+    }
+
+    // Check and unlock achievements
+    function checkAchievements(){
+      let anyChange = false;
+      achievements.forEach(a => {
+        if (!a.unlocked) {
+          // normal condition
+          if (typeof a.condition === 'function' && a.condition()){
+            a.unlocked = true;
+            anyChange = true;
+            // reveal if hiddenTitle
+          } else if (a.special && a.special.type === 'speed_kill') {
+            // handled by updateKillWindow
+          } else if (a.id === 'ach15' && a.condition()) {
+            a.unlocked = true;
+            anyChange = true;
+          }
+        }
+      });
+      if (anyChange) renderAchievements();
+    }
+
+    // Utility to reveal a secret by id (only sets revealed — collecting is separate)
+    function revealSecretById(id, revealName){
+      const s = secrets.find(x => x.id === id);
+      if (!s) return;
+      if (!s.revealed){
+        s.revealed = true;
+        if (revealName) s.name = revealName;
+        renderSecrets();
+      }
+    }
+
+    // Chance-based secret unlocking with triggers
+    function maybeUnlockSecret(trigger){
+      // map triggers to secrets
+      if (trigger === 'purchase' || trigger === 'first_upgrade') {
+        if (!secrets[1].revealed) {
+          // reveal first upgrade secret reliably on first upgrade
+          revealSecretById('s2', 'Forged in Fire');
+        }
+        // smaller chance for another secret
+        if (!secrets[2].revealed && Math.random() < 0.12) revealSecretById('s3', 'Hidden Pebble');
+      } else if (trigger === 'random_hit' || trigger === 'first_asteroid') {
+        if (trigger === 'first_asteroid' && !secrets[0].revealed) revealSecretById('s1', 'First Light');
+        // random chance reveals
+        if (!secrets[2].revealed && Math.random() < 0.08) revealSecretById('s3', 'Hidden Pebble');
+        if (!secrets[5].revealed && Math.random() < 0.02) revealSecretById('s6', 'Lucky Fragment');
+      } else if (trigger === 'time_played') {
+        if (!secrets[3].revealed && secondsPlayed >= 300) revealSecretById('s4', 'Hidden Transmission');
+        if (!secrets[2].revealed && secondsPlayed >= 60 && Math.random() < 0.05) revealSecretById('s3', 'Hidden Pebble');
+      } else if (trigger === 'earn_money') {
+        if (!secrets[4].revealed && totalMoneyEarned >= 500) revealSecretById('s5', 'Hidden Fortune');
+      } else if (trigger === 'achievement_unlocked') {
+        // reveal when number of unlocked achievements increases
+        const unlockedCount = achievements.filter(a => a.unlocked).length;
+        if (!secrets[6].revealed && unlockedCount >= 5) revealSecretById('s7', 'The Overseer');
+        if (!secrets[8].revealed && secrets.filter(s=>s.revealed).length >= 9) revealSecretById('s9', 'Collector\'s Echo');
+      } else if (trigger === 'secret_collected') {
+        // once many secrets collected, reveal more
+        const collectedCount = secrets.filter(s => s.collected).length;
+        if (!secrets[8].revealed && collectedCount >= 9) revealSecretById('s9', 'Collector\'s Echo');
+      } else if (trigger === 'rare_random') {
+        if (!secrets[5].revealed && Math.random() < 0.007) revealSecretById('s6', 'Lucky Fragment');
+      }
+
+      // global milestone checks
+      if (!secrets[7].revealed && asteroidsDestroyed >= 100) revealSecretById('s8', 'Enduring Impact');
+      if (!secrets[9].revealed && achievements.every(a=>a.unlocked) && secrets.every(s=>s.revealed)) revealSecretById('s10','Everything Revealed');
+      // if all secrets revealed, reveal the all_secrets secret
+      if (!secrets[8].revealed && secrets.filter(s=>s.revealed).length >= 9) revealSecretById('s9', 'Collector\'s Echo');
+    }
+
+    // Public method used by events
+    function unlockSecret(key){
+      maybeUnlockSecret(key);
+    }
+
+    // Achievements button open/close
+    achievementsButton.addEventListener('click', () => {
+      const visible = achievementsMenu.style.display === 'block';
+      achievementsMenu.style.display = visible ? 'none' : 'block';
+      if (!visible) {
+        renderAchievements();
+        renderSecrets();
+      }
+    });
+
+    closeAchievements.addEventListener('click', () => {
+      achievementsMenu.style.display = 'none';
+    });
+
+    // Secrets slide-in toggles
+    viewSecretsBtn.addEventListener('click', () => {
+      secretsPanel.classList.add('open');
+      secretsPanel.setAttribute('aria-hidden', 'false');
+    });
+
+    closeSecrets.addEventListener('click', () => {
+      secretsPanel.classList.remove('open');
+      secretsPanel.setAttribute('aria-hidden', 'true');
+    });
+
+    /* GAME FUNCTIONS (unchanged except event hooks added) */
     function randomEdgePosition(rect) {
       const edge = Math.floor(Math.random() * 4);
       let x, y, dx, dy;
@@ -378,6 +855,35 @@ function startTimer() {
         moneyDisplay.textContent = `Money: $${money}`;
         circle.remove();
         activeCircles = activeCircles.filter(c => c.el !== circle);
+        totalEvents++;
+        updateStatsUI();
+
+        // record kill time for speed_kill achievement
+        recentKillsTimestamps.push(Date.now());
+        // remove old timestamps > window (10s)
+        const now = Date.now();
+        recentKillsTimestamps = recentKillsTimestamps.filter(t => now - t <= 10000);
+        if (!achievements.find(a=>a.id==='ach11').unlocked) {
+          if (recentKillsTimestamps.length >= 3) {
+            const a = achievements.find(a=>a.id==='ach11');
+            a.unlocked = true;
+            // reveal special hidden
+            a.hiddenTitle = false;
+            renderAchievements();
+            maybeUnlockSecret('achievement_unlocked');
+          }
+        }
+
+        checkAchievements();
+
+        // secrets: small chance to unlock on hits or unlock by milestones
+        unlockSecret('random_hit');
+        unlockSecret('earn_money'); // check money-based secret conditions too
+
+        // trigger specific: first asteroid
+        if (asteroidsDestroyed === 1) unlockSecret('first_asteroid');
+        // rare random unlock
+        if (Math.random() < 0.01) unlockSecret('rare_random');
       });
 
       gameArea.appendChild(circle);
@@ -409,9 +915,24 @@ function startTimer() {
       createMovingCircle();
       animateCircles();
     });
-    
-    
-    
+
+    // initial render of the money display (already appended)
+    moneyDisplay.textContent = `Money: $${money}`;
+
+    // periodic checks to unlock secrets/time-based achievements
+    setInterval(() => {
+      // check achievements / secrets that are time dependent
+      checkAchievements();
+      maybeUnlockSecret('time_played');
+      maybeUnlockSecret('earn_money');
+      renderAchievements();
+      renderSecrets();
+    }, 2000);
+
+    // Keep UI in sync
+    updateStatsUI();
+
   </script>
 </body>
 </html>
+
