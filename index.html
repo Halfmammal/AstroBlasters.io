@@ -23,8 +23,8 @@
     .menuButton{ background:#444; border:none; color:white; font-size:14px; padding:8px 12px; border-radius:6px; cursor:pointer; }
     .menuButton:hover{ background:#555; }
 
-    .circle{ position:absolute; width:48px; height:48px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; z-index:20; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.6);}
-    .hp-bar{ position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:44px; height:7px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.06);}
+    .circle{ position:absolute; width:48px; height:48px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; z-index:20; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.6); }
+    .hp-bar{ position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:44px; height:7px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); }
     .hp-bar-inner{ height:100%; width:100%; transform-origin:left center; transition:width .06s linear; background:linear-gradient(90deg,#ff6b6b,#f39c12); }
 
     #statsMenu{ opacity:.95; background:#1a1a1a; border:2px solid #555; border-radius:8px; padding:12px; display:none; position:absolute; top:60px; left:14px; width:300px; z-index:40; box-sizing:border-box; }
@@ -41,9 +41,9 @@
       text-align: center;
       display: none;
       z-index: 3;
-      position: relative; /* restored to original look/layout */
+      position: relative;
       box-sizing: border-box;
-      width: auto; /* not pinned to right/top */
+      width: auto;
     }
     .store-section { margin-bottom: 16px; text-align:left; max-width:420px; margin-left:auto; margin-right:auto; }
     .buyButton { background-color:#333; color:white; border:1px solid #666; padding:10px 12px; margin:5px 0; border-radius:6px; cursor:pointer; width:100%; text-align:left; }
@@ -131,7 +131,7 @@
 
       <div class="store-section">
         <h3>Asteroid Value</h3>
-        <p style="font-size:12px;opacity:.9;margin-bottom:6px;">Each purchase increases asteroid payouts quickly (level table).</p>
+        <p style="font-size:12px;opacity:.9;margin-bottom:6px;">Each purchase increases asteroid payouts by 1.5× (multiplicative).</p>
         <button class="buyButton" data-type="value" data-cost="25" data-level="1">Value Lv1 - $25</button>
       </div>
     </div>
@@ -140,10 +140,6 @@
   </div>
 
   <script>
-  // (All game JS kept identical to the previous merged version — only store CSS/layout changed.)
-  // For brevity here I'll keep the same JS as before. Paste the full JS from the merged version (unchanged)
-  // so logic for upgrades/spawns/achievements remains intact.
-
   // ---------- Core vars ----------
   const startButton = document.getElementById('startButton');
   const startScreen = document.getElementById('startScreen');
@@ -182,11 +178,11 @@
   let upgrades = { weapon: 0, scanner: 0, value: 0 };
   let weaponLevel = 0;
 
-  const VALUE_LEVEL_PAYOUT = [1, 1, 2, 5, 10, 20, 40, 80];
+  // --- payout now uses multiplicative 1.5x per 'value' upgrade ---
   function payoutForBase(base){
-    const level = Math.max(0, upgrades.value);
-    const scale = (VALUE_LEVEL_PAYOUT[level] !== undefined) ? VALUE_LEVEL_PAYOUT[level] : VALUE_LEVEL_PAYOUT[VALUE_LEVEL_PAYOUT.length-1] * Math.pow(2, level - (VALUE_LEVEL_PAYOUT.length-1));
-    return Math.max(1, Math.round(base * scale));
+    const level = Math.max(0, upgrades.value || 0);
+    const multiplier = Math.pow(1.5, level); // 1.5x per upgrade
+    return Math.max(1, Math.round(base * multiplier));
   }
 
   const MAX_ACTIVE_ASTEROIDS = 5;
