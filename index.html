@@ -22,7 +22,16 @@
     #menuBar{ display:flex; justify-content:space-around; align-items:center; background:#333; border-bottom:2px solid #555; height:50px; z-index:30; position:relative; }
     .menuButton{ background:#444; border:none; color:white; font-size:14px; padding:8px 12px; border-radius:6px; cursor:pointer; }
     .menuButton:hover{ background:#555; }
+    
+    .settings-menu { display: none; position: absolute; top: 60px; right: 100px; background-color: #141428;border: 2px solid #3a3a6a; border-radius: 10px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 20;
+}
 
+.settings-menu button {  display: block; width: 100%; background: none; border: none; color: #fff; font-size: 14px; text-align: left; padding: 8px 12px; border-radius: 6px; cursor: pointer;
+}
+
+.settings-menu button:hover {
+  background-color: #303060;
+}
     .circle{ position:absolute; width:48px; height:48px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; z-index:20; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.6); }
     .hp-bar{ position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:44px; height:7px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); }
     .hp-bar-inner{ height:100%; width:100%; transform-origin:left center; transition:width .06s linear; background:linear-gradient(90deg,#ff6b6b,#f39c12); }
@@ -80,7 +89,19 @@
       <button class="menuButton" id="statsToggle">Stats</button>
       <button class="menuButton" id="achToggle">Achievements</button>
       <button class="menuButton" id="settingsBtn">Settings</button>
+    <div id="settingsMenu" class="settings-menu">
+        <button class="menuButton" id="saveButton"> Save</button>
+        <button id="pauseButton"> Pause</button>
+        <button id="restartButton"> Restart</button>
+</div>
     </div>
+
+    <div id="restartConfirm" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a1a; border:2px solid #555; border-radius:8px; padding:16px; text-align:center; z-index:100;">
+  <div style="margin-bottom:12px;">Are you sure you want to restart?</div>
+  <button id="confirmYes" class="menuButton" style="margin-right:8px;">Yes</button>
+  <button id="confirmNo" class="menuButton">No</button>
+</div>
+
 
     <!-- Achievements & Secrets -->
     <div id="achievementsMenu">
@@ -159,9 +180,24 @@
   const secretsPanel = document.getElementById('secretsPanel');
   const secretsList = document.getElementById('secretsList');
   const closeSecrets = document.getElementById('closeSecrets');
+  
+  const settingsBtn = document.getElementById("settingsBtn");
+const settingsMenu = document.getElementById("settingsMenu");
+const pauseButton = document.getElementById("pauseButton");
+const restartButton = document.getElementById("restartButton");
+const restartConfirm = document.getElementById("restartConfirm");
+const confirmYes = document.getElementById("confirmYes");
+const confirmNo = document.getElementById("confirmNo");
+const saveButton = document.getElementById("saveButton");
+
+
 
   let activeCircles = [];
   let timerInterval = null;
+
+  // settings
+
+  let isPaused = false;
 
   // Stats
   let money = 0;
@@ -382,6 +418,7 @@
   }
 
   function createMovingCircle(options){
+    if (isPaused) return;
     if (activeCircles.length >= MAX_ACTIVE_ASTEROIDS) return;
     const rect = gameArea.getBoundingClientRect();
     const { x,y,dx,dy } = randomEdgePosition(rect);
@@ -457,8 +494,10 @@
     const rect = gameArea.getBoundingClientRect();
     for (let i = activeCircles.length - 1; i >= 0; i--){
       const c = activeCircles[i];
+        if (!isPaused) {
       c.x += c.dx; c.y += c.dy;
       c.el.style.left = `${c.x}px`; c.el.style.top = `${c.y}px`;
+        }
       if (c.x < -80 || c.x > rect.width + 80 || c.y < menuHeight - 80 || c.y > rect.height + 80){
         c.el.remove(); activeCircles.splice(i,1);
       }
@@ -469,6 +508,7 @@
   function startTimer(){
     if (timerInterval) return;
     timerInterval = setInterval(()=>{
+      if (isPaused) return; // <-- skip everything while paused
       secondsPlayed++; updateStatsUI();
       const scannerFactor = 1 + (0.18 * upgrades.scanner);
       const effectiveSpawnProb = Math.min(0.9, BASE_SPAWN_PROB * scannerFactor);
@@ -477,6 +517,16 @@
       }
     }, BASE_SPAWN_INTERVAL_MS);
   }
+
+  pauseButton.addEventListener("click", () => {
+  isPaused = !isPaused;
+  pauseButton.textContent = isPaused ? " Resume" : " Pause";
+  const gameArea = document.getElementById("gameArea");
+  gameArea.style.opacity = isPaused ? "0.5" : "1";
+  if (!isPaused) {
+    createMovingCircle();
+  }
+});
 
   shopToggle.addEventListener('click', (e)=>{
     storeMenu.style.display = storeMenu.style.display === 'block' ? 'none' : 'block';
@@ -489,6 +539,13 @@
     if (!visible){ renderAchievements(); renderSecrets(); }
     e.stopPropagation();
   });
+
+  settingsBtn.addEventListener("click", (e) => {
+   e.stopPropagation(); // prevent click from closing immediately
+   const isVisible = settingsMenu.style.display === "block";
+  settingsMenu.style.display = isVisible ? "none" : "block";
+  });
+  
 
   document.addEventListener('click', (e)=>{
     if (storeMenu.style.display === 'block' && !storeMenu.contains(e.target) && e.target !== shopToggle) {
@@ -582,6 +639,10 @@
       e.stopPropagation();
     });
   });
+  
+  document.addEventListener("DOMContentLoaded", () => {
+  loadGame();
+});
 
   setInterval(()=>{
     checkAchievements();
@@ -601,6 +662,79 @@
     animateCircles();
     updateStatsUI();
   });
+
+  saveButton.addEventListener("click", () => {
+  const saveData = {
+    money,
+    weaponLevel,
+    upgrades,
+    asteroidsDestroyed,
+    secondsPlayed,
+    totalMoneyEarned,
+    moneySpent,
+    upgradesPurchased,
+    totalEvents,
+    allyCount,
+    
+   
+    
+    
+    // you could add more here
+  };
+
+  localStorage.setItem("myGameSave", JSON.stringify(saveData));
+  alert("Game saved!");
+});
+
+  function loadGame() {
+  const saved = localStorage.getItem("myGameSave");
+  if (saved) {
+    const data = JSON.parse(saved);
+    money = data.money || 0;
+    weaponLevel = data.weaponLevel || 0;
+    upgrades = data.upgrades || {};
+    asteroidsDestroyed = data.asteroidsDestroyed || 0;
+    secondsPlayed = data.secondsPlayed || 0;
+    totalMoneyEarned = data.totalMoneyEarned || 0;
+    moneySpent = data.moneySpent || 0;
+    upgradesPurchased = data.upgradesPurchased || 0;
+    totalEvents = data.totalEvents || 0;
+    allyCount = data.ally || 0;
+    
+    updateButtonLabel(weapon);
+    updateButtonLabel(scanner);
+    updateButtonLabel(value);
+
+  }
+}
+
+  restartButton.addEventListener("click", () => {
+  restartConfirm.style.display = "block";
+});
+
+confirmNo.addEventListener("click", () => {
+  restartConfirm.style.display = "none";
+});
+
+  confirmYes.addEventListener("click", () => {
+ 
+  money = 0; totalMoneyEarned = 0; moneySpent = 0; asteroidsDestroyed = 0; upgradesPurchased = 0; secondsPlayed = 0; totalEvents = 0; allyCount = 0; aliensDestroyed = 0; upgrades = { weapon: 0, scanner: 0, value: 0 }; weaponLevel = 0;
+
+  achievements.forEach(a => { a.unlocked = false; a.claimed = false; a.hiddenTitle = !!a.hiddenTitle; });
+  secrets.forEach(s => { s.revealed = false; s.collected = false; });
+  activeCircles.forEach(c => c.el.remove());
+  activeCircles = [];
+
+  isPaused = false;
+  pauseButton.textContent = " Pause";
+  gameArea.style.opacity = "1";
+  clearInterval(timerInterval);
+  timerInterval = null;
+  startTimer();
+  createMovingCircle();
+  createMovingCircle();
+  
+});
 
   updateStatsUI();
   renderAchievements();
