@@ -32,7 +32,29 @@
 .settings-menu button:hover {
   background-color: #303060;
 }
-    .circle{ position:absolute; width:48px; height:48px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; z-index:20; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.6); }
+.circle {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;   /* keeps the circular hitbox */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    z-index: 20;
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+
+    /* ✨ Make the visible part an image instead of a circle */
+    background: transparent; 
+    background-image: url("AsteroidPicture2.png");
+    background-size: 120%;   /* keeps the correct image proportions */
+    background-repeat: no-repeat;
+    background-position: center;
+  
+}
     .hp-bar{ position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:44px; height:7px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); }
     .hp-bar-inner{ height:100%; width:100%; transform-origin:left center; transition:width .06s linear; background:linear-gradient(90deg,#ff6b6b,#f39c12); }
 
@@ -49,7 +71,7 @@
       padding: 15px;
       text-align: center;
       display: none;
-      z-index: 3;
+      z-index: 30;
       position: relative;
       box-sizing: border-box;
       width: auto;
@@ -79,7 +101,7 @@
 </head>
 <body>
   <div id="startScreen">
-    <h1>Cosmo Blasters Prototype</h1>
+    <h1>Cosmo Blasters</h1>
     <button id="startButton">Start Game</button>
   </div>
 
