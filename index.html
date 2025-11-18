@@ -1,133 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cosmo Blasters - Scanner & Value Updates + Background</title>
-  <style>
-    body { margin:0; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; color:#fff; font-family:Arial, sans-serif; overflow:hidden; }
-    #startScreen{ text-align:center; }
-    #startButton{ background:#4CAF50; border:none; padding:12px 22px; font-size:18px; color:#fff; border-radius:10px; cursor:pointer; }
-    #gameArea{
-      position:relative;
-      width:900px; max-width:95vw; height:560px;
-      background-image: url('stockSpaceBackground.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      border:3px solid #555; border-radius:10px; display:none; overflow:hidden; box-sizing:border-box;
-    }
-    #gameArea::after{ content:""; position:absolute; inset:0; background:linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)); pointer-events:none; z-index:1; border-radius:10px; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cosmo Blasters — Achievements Restored, Shop Centered Top</title>
+<style>
+  :root{ --bg:#000; --panel:#111; --muted:#666; }
+  body{ margin:0; height:100vh; display:flex; justify-content:center; align-items:center; background:var(--bg); color:#fff; font-family:Arial, sans-serif; overflow:hidden; }
+  button { font-family: inherit; }
 
-    #menuBar{ display:flex; justify-content:space-around; align-items:center; background:#333; border-bottom:2px solid #555; height:50px; z-index:30; position:relative; }
-    .menuButton{ background:#444; border:none; color:white; font-size:14px; padding:8px 12px; border-radius:6px; cursor:pointer; }
-    .menuButton:hover{ background:#555; }
-    
-    .settings-menu { display: none; position: absolute; top: 60px; right: 100px; background-color: #141428;border: 2px solid #3a3a6a; border-radius: 10px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); z-index: 20;
-}
+  /* ---------- Intro & Game area ---------- */
+  #startScreen{ position:relative; width:100%; height:100vh; display:flex; align-items:center; justify-content:center; background:#000; z-index:1000; transition:opacity 1200ms ease; }
+  #introBox{ width:920px; max-width:94vw; height:560px; border-radius:10px; border:3px solid #444; background: url('stockSpaceBackground.jpg') center/cover no-repeat; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; box-sizing:border-box; }
+  #introOverlay{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0.65),rgba(0,0,0,0.65)); display:flex; align-items:center; justify-content:center; z-index:2; padding-left:6%; padding-right:6%; }
+  #introText{ max-width:88%; font-size:22px; line-height:1.35; text-align:center; white-space:nowrap; font-weight:600; color:#e6ffe6; text-shadow:0 2px 18px rgba(0,0,0,0.8); overflow:hidden; }
 
-.settings-menu button {  display: block; width: 100%; background: none; border: none; color: #fff; font-size: 14px; text-align: left; padding: 8px 12px; border-radius: 6px; cursor: pointer;
-}
+  #gameArea{ position:relative; width:940px; max-width:95vw; height:600px; background-image:url('stockSpaceBackground.jpg'); background-size:cover; background-position:center; border:3px solid #555; border-radius:10px; display:none; box-sizing:border-box; overflow:hidden; opacity:0; transition:opacity 900ms ease; }
+  #gameArea::after{ content:""; position:absolute; inset:0; background:linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)); pointer-events:none; z-index:1; border-radius:10px; }
 
-.settings-menu button:hover {
-  background-color: #303060;
-}
-.circle {
-    position: absolute;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;   /* keeps the circular hitbox */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: #fff;
-    z-index: 20;
-    user-select: none;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  /* overlays for events */
+  .event-overlay { position:absolute; inset:0; pointer-events:none; z-index:45; transition:opacity 220ms ease; opacity:0; mix-blend-mode: screen; }
+  .solar-overlay { background: linear-gradient(rgba(255,140,0,0.08), rgba(255,80,0,0.06)); }
+  .blackhole-overlay { background: linear-gradient(rgba(120,60,160,0.12), rgba(60,20,120,0.08)); }
 
-    /* ✨ Make the visible part an image instead of a circle */
-    background: transparent; 
-    background-image: url("AsteroidPicture2.png");
-    background-size: 120%;   /* keeps the correct image proportions */
-    background-repeat: no-repeat;
-    background-position: center;
-  
-}
-    .hp-bar{ position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:44px; height:7px; background:rgba(0,0,0,0.35); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); }
-    .hp-bar-inner{ height:100%; width:100%; transform-origin:left center; transition:width .06s linear; background:linear-gradient(90deg,#ff6b6b,#f39c12); }
+  /* menu bar */
+  #menuBar{ display:flex; justify-content:space-around; align-items:center; background:#333; border-bottom:2px solid #555; height:50px; z-index:30; position:relative; }
+  .menuButton{ background:#444; border:none; color:white; font-size:14px; padding:8px 12px; border-radius:6px; cursor:pointer; }
+  .menuButton:hover{ background:#555; }
 
-    #statsMenu{ opacity:.95; background:#1a1a1a; border:2px solid #555; border-radius:8px; padding:12px; display:none; position:absolute; top:60px; left:14px; width:300px; z-index:40; box-sizing:border-box; }
-    .stat-card{ border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px; background:rgba(39,39,39,0.12); margin-bottom:8px; }
+  /* Stats panel */
+  #statsMenu { position:absolute; top:70px; left:18px; width:320px; z-index:60; display:none; background: linear-gradient(180deg,#191919,#0f0f12); border: 2px solid #444; border-radius: 8px; padding: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
+  .stat-card { background: rgba(30,30,30,0.6); padding:8px; border-radius:8px; margin-bottom:8px; border:1px solid rgba(255,255,255,0.04); }
 
-    /* ---- STORE (restored simpler style) ---- */
-    #storeMenu {
-      opacity: .8;
-      background-color: #1a1a1a;
-      border: 2px solid #555;
-      border-radius: 8px;
-      margin: 20px;
-      padding: 15px;
-      text-align: center;
-      display: none;
-      z-index: 30;
-      position: relative;
-      box-sizing: border-box;
-      width: auto;
-    }
-    .store-section { margin-bottom: 16px; text-align:left; max-width:420px; margin-left:auto; margin-right:auto; }
-    .buyButton { background-color:#333; color:white; border:1px solid #666; padding:10px 12px; margin:5px 0; border-radius:6px; cursor:pointer; width:100%; text-align:left; }
-    .buyButton:hover { background-color:#555; }
-    .buyButton:disabled { opacity:0.6; cursor:default; background-color:#2b2b2b; color:#bbb; border-color:#444; }
+  /* ----- ACHIEVEMENTS: RESTORED CARD LAYOUT (the original you first provided) ----- */
+  #achievementsMenu{ position:absolute; top:50px; left:20px; right:20px; bottom:60px; background:rgba(20,20,20,0.95); border:2px solid #555; border-radius:8px; padding:14px; display:none; z-index:50; box-sizing:border-box; overflow:hidden; }
+  #achievementsMenu .ach-head { display:flex; justify-content:space-between; align-items:center; }
+  #achievementsList{ position:absolute; top:48px; left:14px; bottom:14px; right:14px; overflow-y:auto; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .achievement-card{ border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px; background:rgba(39,39,39,0.12); min-height:72px; display:flex; flex-direction:column; justify-content:space-between; }
+  .achievement-card.locked { opacity:0.7; filter:grayscale(0.06); }
+  .progressBarWrap{ width:100%; height:8px; background:rgba(0,0,0,0.2); border-radius:6px; overflow:hidden; margin-top:8px; }
+  .progressBar{ height:100%; width:0%; background:linear-gradient(90deg,#39d353,#14a37d); transition:width 200ms linear; }
+  .claimButton{ background:#333; color:#fff; border:1px solid #666; padding:6px 10px; border-radius:6px; cursor:pointer; }
+  .claimButton:disabled{ opacity:.45; cursor:default; }
 
-    #achievementsMenu{ position:absolute; top:50px; left:20px; right:20px; bottom:60px; background:rgba(20,20,20,0.95); border:2px solid #555; border-radius:8px; padding:14px; display:none; z-index:50; box-sizing:border-box; overflow:hidden; }
-    #achievementsList{ position:absolute; top:48px; left:14px; bottom:14px; right:14px; overflow-y:auto; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-    .achievement-card{ border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px; background:rgba(39,39,39,0.12); min-height:72px; display:flex; flex-direction:column; justify-content:space-between; }
-    .claimButton{ background:#333; color:#fff; border:1px solid #666; padding:6px 10px; border-radius:6px; cursor:pointer;}
-    .claimButton:disabled{ opacity:.45; cursor:default; }
+  /* Secrets panel (same original look, nested inside achievements as before) */
+  #secretsPanel{ position:absolute; top:0; bottom:0; width:420px; right:-460px; background:linear-gradient(180deg,#141414,#1e1e1e); border-left:2px solid #444; padding:12px; box-sizing:border-box; transition:right 350ms cubic-bezier(.2,.9,.25,1); z-index:60; display:flex; flex-direction:column; }
+  #secretsPanel.open{ right:14px; }
+  .secret-card{ display:flex; gap:8px; align-items:center; border:1px solid rgba(255,255,255,0.06); padding:8px; border-radius:8px; margin-bottom:8px; background:rgba(35,35,35,0.08); }
+  .secret-image{ width:64px; height:48px; border-radius:6px; background:#111; display:flex; align-items:center; justify-content:center; font-size:28px; }
+  .secret-title{ font-weight:bold; font-size:13px; }
+  .secret-sub{ font-size:12px; opacity:.8; }
 
-    #secretsPanel{ position:absolute; top:0; bottom:0; width:420px; right:-460px; background:linear-gradient(180deg,#141414,#1e1e1e); border-left:2px solid #444; padding:12px; box-sizing:border-box; transition:right 350ms cubic-bezier(.2,.9,.25,1); z-index:60; display:flex; flex-direction:column; }
-    #secretsPanel.open{ right:14px; }
-    .secret-card{ display:flex; gap:8px; align-items:center; border:1px solid rgba(255,255,255,0.06); padding:8px; border-radius:8px; margin-bottom:8px; background:rgba(35,35,35,0.08); }
-    .secret-image{ width:64px; height:48px; border-radius:6px; background:#111; display:flex; align-items:center; justify-content:center; font-size:28px; }
-    .secret-title{ font-weight:bold; font-size:13px; }
-    .secret-sub{ font-size:12px; opacity:.8; }
+  /* Store - centered at TOP under menu */
+  #storeMenu { position:absolute; top:62px; left:50%; transform:translateX(-50%); width:820px; max-width:94vw; z-index:65; display:none; background:linear-gradient(180deg,#0f0f12,#15151a); border:2px solid #444; border-radius:8px; padding:12px; box-shadow:0 8px 30px rgba(0,0,0,0.7); box-sizing:border-box; }
+  #storeGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
+  .store-tile { background:linear-gradient(180deg,rgba(40,40,50,0.6),rgba(20,20,24,0.6)); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:6px; min-height:96px; }
+  .store-title-row { display:flex; justify-content:space-between; align-items:center; }
+  .store-title { font-weight:700; }
+  .store-cost { background:#222; padding:6px 8px; border-radius:6px; font-size:13px; border:1px solid #333; color:#fff; }
+  .store-actions { display:flex; justify-content:space-between; align-items:center; margin-top:auto; }
+  .buyButton { background:#1f6feb; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+  .buyButton:disabled{ background:#333; opacity:0.6; cursor:default; }
 
-    #moneyDisplay{ position:absolute; bottom:10px; left:18px; font-size:20px; z-index:40; }
+  /* Asteroid */
+  .circle{ position:absolute; width:56px; height:56px; border-radius:50%; background-image:url('Asteroid.png'); background-size:120% 120%; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20; user-select:none; overflow:visible; }
+  .circle .tint{ position:absolute; inset:0; border-radius:50%; pointer-events:none; mix-blend-mode:multiply; opacity:0.95; z-index:2; }
+  .circle .accent{ position:absolute; inset:0; border-radius:50%; pointer-events:none; z-index:3; opacity:0.9; background-repeat:no-repeat; background-position:center; background-size:110% 110%; }
+  @keyframes spinRainbow { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  .tint.rainbow{ background: conic-gradient(red,orange,yellow,green,blue,indigo,violet,red); mix-blend-mode:screen; animation:spinRainbow 6s linear infinite; opacity:0.9; }
 
-    @media (max-width:980px){ #achievementsList{ grid-template-columns:repeat(1,1fr); } #statsMenu{ width:42vw; } #storeMenu{ width:86vw; margin:8px; } }
-  </style>
+  .hp-bar{ position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); width:56px; height:7px; background:rgba(0,0,0,0.45); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); z-index:5; }
+  .hp-bar-inner{ height:100%; width:100%; transition:width .06s linear; background:linear-gradient(90deg,#ff6b6b,#f39c12); }
+
+  /* Alien sprite - transparent no box artifacts */
+  .alien{
+    position:absolute;
+    width:76px; height:44px;
+    z-index:80;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:22px;
+    background-image:url('Alien.png');
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-color:transparent !important;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    padding:0;
+    margin:0;
+  }
+
+  /* Ally sprite - larger and without box artifacts */
+  .ally{
+    position:absolute;
+    width:96px; height:56px;
+    z-index:55;
+    display:block;
+    background-image:url('AllyShip.png');
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-color:transparent !important;
+    border:none;
+    box-shadow:none;
+    outline:none;
+    padding:0;
+    margin:0;
+    pointer-events:none;
+  }
+
+  .ally-shot{ position:absolute; width:8px; height:8px; border-radius:50%; background: #ffd54f; z-index:56; box-shadow:0 0 6px rgba(255,213,79,0.8); }
+
+  .alien-popup{ position:absolute; left:50%; top:40%; transform:translate(-50%,-50%); z-index:999; font-size:36px; font-weight:800; color:#00ff6a; text-shadow:0 2px 12px rgba(0,0,0,0.6); opacity:0; pointer-events:none; transition: opacity 220ms ease, transform 220ms ease; }
+  .alien-popup.show{ opacity:1; transform:translate(-50%,-60%); }
+
+  .explosion { position:absolute; width:10px; height:10px; border-radius:50%; background: radial-gradient(circle, rgba(255,200,80,1) 0%, rgba(255,80,0,0.8) 40%, rgba(255,0,0,0.2) 70%, transparent 100%); z-index:90; pointer-events:none; transform:translate(-50%,-50%) scale(0.6); transition: transform 300ms ease, opacity 300ms ease; opacity:1; }
+
+  /* debug buttons — separate Solar and Black Hole */
+  .debugBtn { position:fixed; z-index:9999; opacity:0.95; border-radius:8px; border:none; color:#fff; cursor:pointer; width:44px; height:44px; }
+  #debugAlienBtn { right:8px; bottom:8px; background:linear-gradient(180deg,#333,#111); }
+  #debugEventBtn { right:60px; bottom:8px; background:linear-gradient(180deg,#223,#112); }
+  #debugSolarBtn { right:116px; bottom:8px; background:linear-gradient(180deg,#ff8c00,#d86c00); }
+  #debugBlackholeBtn { right:172px; bottom:8px; background:linear-gradient(180deg,#6f38b5,#4b2384); }
+
+  #moneyDisplay{ position:absolute; bottom:10px; left:18px; font-size:20px; z-index:40; }
+
+  @media (max-width:1200px){ #storeGrid { grid-template-columns:repeat(2,1fr); } #achievementsList{ grid-template-columns:repeat(1,1fr); } }
+  @media (max-width:780px){ #storeGrid { grid-template-columns:repeat(1,1fr); } #statsMenu{ width:42vw; left:4vw; } #storeMenu{ width:92vw; left:50%; transform:translateX(-50%); top:64px; } }
+</style>
 </head>
 <body>
+
+  <!-- Intro -->
   <div id="startScreen">
-    <h1>Cosmo Blasters</h1>
-    <button id="startButton">Start Game</button>
+    <div id="introBox">
+      <div id="introOverlay">
+        <div id="introText" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
 
-  <div id="gameArea">
+  <!-- Game area -->
+  <div id="gameArea" aria-hidden="true">
     <div id="menuBar">
       <button class="menuButton" id="shopToggle">Shop</button>
       <button class="menuButton" id="statsToggle">Stats</button>
       <button class="menuButton" id="achToggle">Achievements</button>
       <button class="menuButton" id="settingsBtn">Settings</button>
-    <div id="settingsMenu" class="settings-menu">
-        <button class="menuButton" id="saveButton"> Save</button>
-        <button id="pauseButton"> Pause</button>
-        <button id="restartButton"> Restart</button>
-</div>
+      <div id="settingsMenu" style="display:none; position:absolute; top:60px; right:18px; z-index:90; background:#111; padding:8px; border-radius:8px;">
+        <button id="saveButton" class="menuButton">Save</button>
+        <button id="pauseButton" class="menuButton">Pause</button>
+        <button id="restartButton" class="menuButton">Restart</button>
+      </div>
     </div>
 
-    <div id="restartConfirm" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a1a; border:2px solid #555; border-radius:8px; padding:16px; text-align:center; z-index:100;">
-  <div style="margin-bottom:12px;">Are you sure you want to restart?</div>
-  <button id="confirmYes" class="menuButton" style="margin-right:8px;">Yes</button>
-  <button id="confirmNo" class="menuButton">No</button>
-</div>
+    <!-- event overlays -->
+    <div id="solarOverlay" class="event-overlay solar-overlay" style="opacity:0;"></div>
+    <div id="blackholeOverlay" class="event-overlay blackhole-overlay" style="opacity:0;"></div>
 
-
-    <!-- Achievements & Secrets -->
+    <!-- Achievements (RESTORED original card UI) -->
     <div id="achievementsMenu">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="ach-head">
         <div style="font-weight:bold">Achievements</div>
         <div style="display:flex;gap:8px;align-items:center">
           <div style="font-size:13px;opacity:.9">Rewards = Money</div>
@@ -150,706 +185,847 @@
       </div>
     </div>
 
+    <!-- Stats -->
     <div id="statsMenu">
-      <div class="stat-card"><div>Total Money Earned:</div><div id="totalMoneyEarned">0</div></div>
-      <div class="stat-card"><div>Money Spent:</div><div id="moneySpent">0</div></div>
+      <div class="stat-card"><div>Total Money Earned:</div><div id="totalMoneyEarned">$0</div></div>
+      <div class="stat-card"><div>Money Spent:</div><div id="moneySpent">$0</div></div>
       <div class="stat-card"><div>Asteroids Destroyed:</div><div id="asteroidsDestroyed">0</div></div>
       <div class="stat-card"><div>Upgrades Purchased:</div><div id="upgradesPurchased">0</div></div>
-      <div class="stat-card"><div>Time Played:</div><div id="timePlayed">0s</div></div>
+      <div class="stat-card"><div>Ally Ships:</div><div id="allyCount">0</div></div>
+      <div class="stat-card"><div>Ally Fire Rate (shots/sec):</div><div id="allyRate">0.50</div></div>
+      <div class="stat-card"><div>Weapon Damage:</div><div id="weaponDamage">1</div></div>
+      <div class="stat-card"><div>Time Played:</div><div id="timePlayed">0:00</div></div>
     </div>
 
-    <!-- ---- STORE (restored style) ---- -->
+    <!-- Store (CENTERED TOP) -->
     <div id="storeMenu">
-      <h2>Store Upgrades</h2>
+      <h3 style="margin:0 0 6px 0; text-align:center;">Store</h3>
+      <div id="storeGrid">
+        <div class="store-tile" data-type="weapon">
+          <div class="store-title-row"><div class="store-title">Laser</div><div class="store-cost" data-cost="10">$10</div></div>
+          <div class="store-desc">Multiplies weapon damage by 1.5× per purchase.</div>
+          <div class="store-actions"><div>Lv <span class="store-level">0</span></div><button class="buyButton" data-type="weapon" data-cost="10">Buy</button></div>
+        </div>
 
-      <div class="store-section">
-        <h3>Weapon Upgrades (increases damage)</h3>
-        <button class="buyButton" data-type="weapon" data-cost="10" data-level="1">Laser Lv1 - $10</button>
-      </div>
+        <div class="store-tile" data-type="scanner">
+          <div class="store-title-row"><div class="store-title">Radar (Scanner)</div><div class="store-cost" data-cost="15">$15</div></div>
+          <div class="store-desc">Unlocks additional asteroid types (visuals) — does not replace older types.</div>
+          <div class="store-actions"><div>Lv <span class="store-level">0</span> / 9</div><button id="scannerBuyBtn" class="buyButton" data-type="scanner" data-cost="15">Buy</button></div>
+        </div>
 
-      <div class="store-section">
-        <h3>Scanner Upgrades (unlock rarer asteroids & increase spawn)</h3>
-        <button class="buyButton" data-type="scanner" data-cost="15" data-level="1">Radar Lv1 - $15</button>
-      </div>
+        <div class="store-tile" data-type="value">
+          <div class="store-title-row"><div class="store-title">Value</div><div class="store-cost" data-cost="25">$25</div></div>
+          <div class="store-desc">Each purchase multiplies asteroid HP & payout by 1.5× (multiplicative).</div>
+          <div class="store-actions"><div>Lv <span class="store-level">0</span></div><button class="buyButton" data-type="value" data-cost="25">Buy</button></div>
+        </div>
 
-      <div class="store-section">
-        <h3>Asteroid Value</h3>
-        <p style="font-size:12px;opacity:.9;margin-bottom:6px;">Each purchase increases asteroid payouts by 1.5× (multiplicative).</p>
-        <button class="buyButton" data-type="value" data-cost="25" data-level="1">Value Lv1 - $25</button>
+        <div class="store-tile" data-type="spawn">
+          <div class="store-title-row"><div class="store-title">Spawn Rate</div><div class="store-cost" data-cost="30">$30</div></div>
+          <div class="store-desc">Each purchase increases spawn probability and increases max active asteroids.</div>
+          <div class="store-actions"><div>Lv <span class="store-level">0</span></div><button class="buyButton" data-type="spawn" data-cost="30">Buy</button></div>
+        </div>
+
+        <div class="store-tile" data-type="allyCount">
+          <div class="store-title-row"><div class="store-title">Ally Ships</div><div class="store-cost" data-cost="80">$80</div></div>
+          <div class="store-desc">Purchase an additional ally ship that will help shoot asteroids.</div>
+          <div class="store-actions"><div>Owned <span class="store-level">0</span></div><button class="buyButton" data-type="allyCount" data-cost="80">Buy</button></div>
+        </div>
+
+        <div class="store-tile" data-type="allyRate">
+          <div class="store-title-row"><div class="store-title">Ally Fire Rate</div><div class="store-cost" data-cost="60">$60</div></div>
+          <div class="store-desc">Increases how often ally ships fire (stacking).</div>
+          <div class="store-actions"><div>Lv <span class="store-level">0</span></div><button class="buyButton" data-type="allyRate" data-cost="60">Buy</button></div>
+        </div>
       </div>
     </div>
 
     <div id="moneyDisplay">Money: $0</div>
+    <div id="alienPopup" class="alien-popup" aria-hidden="true"></div>
   </div>
 
-  <script>
-  // ---------- Core vars ----------
-  const startButton = document.getElementById('startButton');
-  const startScreen = document.getElementById('startScreen');
-  const gameArea = document.getElementById('gameArea');
-  const menuHeight = 50;
+  <!-- debug buttons -->
+  <button id="debugBlackholeBtn" class="debugBtn" title="Spawn Black Hole (debug)">BH</button>
+  <button id="debugSolarBtn" class="debugBtn" title="Spawn Solar Flare (debug)">SOL</button>
+  <button id="debugEventBtn" class="debugBtn" title="Trigger random event (debug)">EVT</button>
+  <button id="debugAlienBtn" class="debugBtn" title="Spawn alien (debug)">ALIEN</button>
 
-  const shopToggle = document.getElementById('shopToggle');
-  const statsToggle = document.getElementById('statsToggle');
-  const achToggle = document.getElementById('achToggle');
-  const storeMenu = document.getElementById('storeMenu');
-  const statsMenu = document.getElementById('statsMenu');
-  const achievementsMenu = document.getElementById('achievementsMenu');
-  const achievementsList = document.getElementById('achievementsList');
-  const closeAchievements = document.getElementById('closeAchievements');
-  const moneyDisplay = document.getElementById('moneyDisplay');
-  const viewSecretsBtn = document.getElementById('viewSecretsBtn');
-  const secretsPanel = document.getElementById('secretsPanel');
-  const secretsList = document.getElementById('secretsList');
-  const closeSecrets = document.getElementById('closeSecrets');
-  
-  const settingsBtn = document.getElementById("settingsBtn");
-const settingsMenu = document.getElementById("settingsMenu");
-const pauseButton = document.getElementById("pauseButton");
-const restartButton = document.getElementById("restartButton");
-const restartConfirm = document.getElementById("restartConfirm");
-const confirmYes = document.getElementById("confirmYes");
-const confirmNo = document.getElementById("confirmNo");
-const saveButton = document.getElementById("saveButton");
+<script>
+/* ================= State & constants (kept from last working version) ================= */
+const startScreen = document.getElementById('startScreen');
+const introTextEl = document.getElementById('introText');
 
+const gameArea = document.getElementById('gameArea');
+const shopToggle = document.getElementById('shopToggle');
+const statsToggle = document.getElementById('statsToggle');
+const achToggle = document.getElementById('achToggle');
+const storeMenu = document.getElementById('storeMenu');
+const statsMenu = document.getElementById('statsMenu');
+const achievementsMenu = document.getElementById('achievementsMenu');
+const achievementsList = document.getElementById('achievementsList');
+const closeAchievements = document.getElementById('closeAchievements');
+const viewSecretsBtn = document.getElementById('viewSecretsBtn');
+const secretsPanel = document.getElementById('secretsPanel');
+const secretsList = document.getElementById('secretsList');
+const closeSecrets = document.getElementById('closeSecrets');
+const pauseButton = document.getElementById('pauseButton');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsMenu = document.getElementById('settingsMenu');
+const restartButton = document.getElementById('restartButton');
+const saveButton = document.getElementById('saveButton');
+const moneyDisplay = document.getElementById('moneyDisplay');
+const alienPopup = document.getElementById('alienPopup');
+const debugAlienBtn = document.getElementById('debugAlienBtn');
+const debugEventBtn = document.getElementById('debugEventBtn');
+const debugSolarBtn = document.getElementById('debugSolarBtn');
+const debugBlackholeBtn = document.getElementById('debugBlackholeBtn');
+const scannerBuyBtn = document.getElementById('scannerBuyBtn');
+const solarOverlay = document.getElementById('solarOverlay');
+const blackholeOverlay = document.getElementById('blackholeOverlay');
 
+let money = 0, totalMoneyEarned = 0, moneySpent = 0, asteroidsDestroyed = 0, upgradesPurchased = 0, secondsPlayed = 0, totalEvents = 0;
+let upgrades = { weapon:0, scanner:0, value:0, spawn:0, allyCount:0, allyRate:0 };
+let weaponLevel = 0;
 
-  let activeCircles = [];
-  let timerInterval = null;
+const BASE_SPAWN_PROB = 0.18;
+const BASE_SPAWN_INTERVAL_MS = 1200;
+const DEFAULT_MAX_ACTIVE = 5;
+let maxActive = DEFAULT_MAX_ACTIVE;
+let spawnTimer = null;
+let isPaused = false;
 
-  // settings
+let ALIEN_SPAWN_CHANCE = 0.005;
+let randomEventIntervalMs = 300000;
+let randomEventTimerId = null;
 
-  let isPaused = false;
+let allyShips = [];
+let allyShotSpeed = 512;
+function allyShotsPerSecond(){ return 0.5 * (1 + (upgrades.allyRate || 0) * 0.5) * (allyBuffMultiplier || 1); }
 
-  // Stats
-  let money = 0;
-  let totalMoneyEarned = 0;
-  let moneySpent = 0;
-  let asteroidsDestroyed = 0;
-  let upgradesPurchased = 0;
-  let secondsPlayed = 0;
-  let totalEvents = 0;
-  let allyCount = 0;
-  let aliensDestroyed = 0;
+let allyBuffMultiplier = 1, allyBuffExpiresAt = 0, tempAlienBuffTimeout = null;
 
-  // upgrades
-  let upgrades = { weapon: 0, scanner: 0, value: 0 };
-  let weaponLevel = 0;
+let nextEntityId = 1;
+const activeMap = new Map();
 
-  // --- payout now uses multiplicative 1.5x per 'value' upgrade ---
-  function payoutForBase(base){
-    const level = Math.max(0, upgrades.value || 0);
-    const multiplier = Math.pow(1.5, level); // 1.5x per upgrade
-    return Math.max(1, Math.round(base * multiplier));
-  }
+const ASTEROID_TYPES = [
+  { id:'normal', label:'Gray', hp:10, reward:1 },
+  { id:'red', label:'Red', hp:15, reward:2 },
+  { id:'orange', label:'Orange', hp:22, reward:4 },
+  { id:'yellow', label:'Yellow', hp:33, reward:8 },
+  { id:'green', label:'Green', hp:50, reward:14 },
+  { id:'blue', label:'Blue', hp:75, reward:22 },
+  { id:'indigo', label:'Indigo', hp:112, reward:32 },
+  { id:'violet', label:'Violet', hp:170, reward:48 },
+  { id:'rainbow', label:'Rainbow', hp:250, reward:80 }
+];
 
-  const MAX_ACTIVE_ASTEROIDS = 5;
-  const BASE_SPAWN_INTERVAL_MS = 1000;
-  const BASE_SPAWN_PROB = 0.28;
-  const COST_GROWTH = 2;
-  const DEFAULT_ASTEROID_HP = 10;
-  const MONEY_PER_HIT = 0;
+/* Achievements & Secrets (restored card-style data used by renderer) */
+const achievements = [
+  { id: 'ach1', title: 'Asteroid Rookie', desc: 'Destroy 5 asteroids.', reward: 10, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>asteroidsDestroyed>=5 },
+  { id: 'ach2', title: 'First Blood', desc: 'Destroy your 1st asteroid.', reward: 8, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>asteroidsDestroyed>=1 },
+  { id: 'ach3', title: 'Rock Crusher', desc: 'Destroy 20 asteroids.', reward: 20, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>asteroidsDestroyed>=20 },
+  { id: 'ach4', title: 'Destroyer', desc: 'Destroy 50 asteroids.', reward: 60, unlocked:false, claimed:false, hiddenTitle:true, condition:()=>asteroidsDestroyed>=50 },
+  { id: 'ach5', title: 'Laser Tech', desc: 'Purchase 1 weapon upgrade.', reward: 10, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>upgrades.weapon>=1 },
+  { id: 'ach6', title: 'Radar Expert', desc: 'Purchase 1 scanner upgrade.', reward: 10, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>upgrades.scanner>=1 },
+  { id: 'ach7', title: 'Engineer', desc: 'Purchase 5 upgrades total.', reward: 25, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>upgradesPurchased>=5 },
+  { id: 'ach8', title: 'Collector', desc: 'Earn $100 total.', reward: 25, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>totalMoneyEarned>=100 },
+  { id: 'ach9', title: 'Tycoon', desc: 'Earn $500 total.', reward: 50, unlocked:false, claimed:false, hiddenTitle:true, condition:()=>totalMoneyEarned>=500 },
+  { id: 'ach10', title: 'Marathon Pilot', desc: 'Play for 5 minutes.', reward: 15, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>secondsPlayed>=300 }
+];
 
-  const ASTEROID_TYPES = [
-    { id: 'normal', label: 'Normal', color: '#9b6b49', hp: 10, reward: 1 },
-    { id: 'green', label: 'Green', color: '#6ba37a', hp: 15, reward: 2 },
-    { id: 'blue',  label: 'Blue',  color: '#4aa3ff', hp: 25, reward: 5 },
-    { id: 'purple',label: 'Purple',color: '#b76fb3', hp: 40, reward: 10 }
-  ];
+const secrets = [
+  { id:'s1', name:'First Light', revealed:false, collected:false, hint:'Destroy your first asteroid', reward:12, unlockReason:'first_asteroid', image:'🪨' },
+  { id:'s2', name:'Forged in Fire', revealed:false, collected:false, hint:'Buy your first upgrade', reward:15, unlockReason:'first_upgrade', image:'☄️' },
+  { id:'s3', name:'Alien Relic', revealed:false, collected:false, hint:'Click a rare alien saucer', reward:50, unlockReason:'alien_clicked', image:'👽' }
+];
 
-  const achievements = [
-    { id: 'ach1', title: 'Asteroid Rookie', desc: 'Destroy 5 asteroids.', reward: 10, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 5, hiddenTitle: false },
-    { id: 'ach2', title: 'First Blood', desc: 'Destroy your 1st asteroid.', reward: 8, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 1, hiddenTitle: false },
-    { id: 'ach3', title: 'Rock Crusher', desc: 'Destroy 20 asteroids.', reward: 20, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 20, hiddenTitle: false },
-    { id: 'ach4', title: 'Destroyer', desc: 'Destroy 50 asteroids.', reward: 60, unlocked: false, claimed: false, condition: () => asteroidsDestroyed >= 50, hiddenTitle: true },
-    { id: 'ach5', title: 'Laser Tech', desc: 'Purchase 1 weapon upgrade.', reward: 10, unlocked: false, claimed: false, condition: () => upgrades.weapon >= 1, hiddenTitle: false },
-    { id: 'ach6', title: 'Radar Expert', desc: 'Purchase 1 scanner upgrade.', reward: 10, unlocked: false, claimed: false, condition: () => upgrades.scanner >= 1, hiddenTitle: false },
-    { id: 'ach7', title: 'Engineer', desc: 'Purchase 5 upgrades total.', reward: 25, unlocked: false, claimed: false, condition: () => upgradesPurchased >= 5, hiddenTitle: false },
-    { id: 'ach8', title: 'Collector', desc: 'Earn $100 total.', reward: 25, unlocked: false, claimed: false, condition: () => totalMoneyEarned >= 100, hiddenTitle: false },
-    { id: 'ach9', title: 'Tycoon', desc: 'Earn $500 total.', reward: 50, unlocked: false, claimed: false, condition: () => totalMoneyEarned >= 500, hiddenTitle: true },
-    { id: 'ach10', title: 'Marathon Pilot', desc: 'Play for 5 minutes.', reward: 15, unlocked: false, claimed: false, condition: () => secondsPlayed >= 300, hiddenTitle: false },
-    { id: 'ach11', title: 'Lucky Break', desc: 'Destroy 3 asteroids in under 10 seconds.', reward: 30, unlocked: false, claimed: false, condition: () => false, hiddenTitle: true, special: { type:'speed_kill', window:10, needed:3 } },
-    { id: 'ach12', title: 'Team Builder', desc: 'Reach 3 allies.', reward: 20, unlocked: false, claimed: false, condition: () => allyCount >= 3, hiddenTitle: false },
-    { id: 'ach13', title: 'Alien Menace', desc: 'Destroy 10 aliens.', reward: 40, unlocked: false, claimed: false, condition: () => aliensDestroyed >= 10, hiddenTitle: true },
-    { id: 'ach14', title: 'Event Hunter', desc: 'Trigger 10 total events.', reward: 30, unlocked: false, claimed: false, condition: () => totalEvents >= 10, hiddenTitle: false },
-    { id: 'ach15', title: 'Completionist', desc: 'Unlock all achievements.', reward: 150, unlocked: false, claimed: false, condition: () => achievements.every(a => a.unlocked), hiddenTitle: true }
-  ];
+let recentKillsTimestamps = [];
 
-  const secrets = [
-    { id: 's1', name: '??????', revealed:false, collected:false, hint:'First asteroid destroyed', reward:12, image:'🪨', unlockReason:'first_asteroid' },
-    { id: 's2', name: '??????', revealed:false, collected:false, hint:'First upgrade purchased', reward:15, image:'☄️', unlockReason:'first_upgrade' },
-    { id: 's3', name: '??????', revealed:false, collected:false, hint:'Small random discovery', reward:20, image:'🌑', unlockReason:'random_hit' },
-    { id: 's4', name: '??????', revealed:false, collected:false, hint:'Play for 5 minutes', reward:40, image:'🌠', unlockReason:'time_played_300' },
-    { id: 's5', name: '??????', revealed:false, collected:false, hint:'Earn a decent fortune', reward:50, image:'💠', unlockReason:'earn_money_500' },
-    { id: 's6', name: '??????', revealed:false, collected:false, hint:'Rare random event', reward:80, image:'🌒', unlockReason:'rare_random' },
-    { id: 's7', name: '??????', revealed:false, collected:false, hint:'Unlock 5 achievements', reward:60, image:'🌘', unlockReason:'achievements_5' },
-    { id: 's8', name: '??????', revealed:false, collected:false, hint:'Destroy 100 asteroids', reward:100, image:'🌕', unlockReason:'asteroids_100' },
-    { id: 's9', name: '??????', revealed:false, collected:false, hint:'Unlock all secrets', reward:120, image:'☄️', unlockReason:'all_secrets' },
-    { id: 's10', name: '??????', revealed:false, collected:false, hint:'Ultimate completion bonus', reward:200, image:'💰', unlockReason:'everything_complete' }
-  ];
+/* ========== Helpers & UI Updaters ========== */
+function fmt(n){ return Number(n).toFixed(0); }
+function updateStatsUI(){
+  document.getElementById('totalMoneyEarned').textContent = `$${totalMoneyEarned}`;
+  document.getElementById('moneySpent').textContent = `$${moneySpent}`;
+  document.getElementById('asteroidsDestroyed').textContent = asteroidsDestroyed;
+  document.getElementById('upgradesPurchased').textContent = upgradesPurchased;
+  document.getElementById('allyCount').textContent = upgrades.allyCount || 0;
+  document.getElementById('allyRate').textContent = allyShotsPerSecond().toFixed(2);
+  document.getElementById('weaponDamage').textContent = getPlayerDamage();
+  const minutes = Math.floor(secondsPlayed/60);
+  const seconds = secondsPlayed % 60;
+  document.getElementById('timePlayed').textContent = `${minutes}:${String(seconds).padStart(2,'0')}`;
+  moneyDisplay.textContent = `Money: $${money}`;
+}
 
-  let recentKillsTimestamps = [];
+/* ---- Achievements rendering — restored card layout with claim buttons ---- */
+function renderAchievements(){
+  achievementsList.innerHTML = '';
+  achievements.forEach(a=>{
+    // evaluate unlock
+    if (!a.unlocked && typeof a.condition === 'function' && a.condition()) a.unlocked = true;
 
-  function updateStatsUI(){
-    document.getElementById('totalMoneyEarned').textContent = `$${totalMoneyEarned}`;
-    document.getElementById('moneySpent').textContent = `$${moneySpent}`;
-    document.getElementById('asteroidsDestroyed').textContent = asteroidsDestroyed;
-    document.getElementById('upgradesPurchased').textContent = upgradesPurchased;
-    const minutes = Math.floor(secondsPlayed/60);
-    const seconds = secondsPlayed % 60;
-    document.getElementById('timePlayed').textContent = `${minutes}:${String(seconds).padStart(2,'0')}`;
-    moneyDisplay.textContent = `Money: $${money}`;
-  }
+    const card = document.createElement('div'); card.className = 'achievement-card';
+    if (!a.unlocked && a.hiddenTitle) card.classList.add('locked');
 
-  function renderAchievements(){
-    achievementsList.innerHTML = '';
-    achievements.forEach(a => {
-      const card = document.createElement('div'); card.className='achievement-card';
-      const title = document.createElement('div'); title.className='achievement-title';
-      const desc = document.createElement('div'); desc.className='achievement-desc';
-      if (!a.unlocked && a.hiddenTitle){ title.textContent='??????'; desc.textContent='Unlock to reveal this achievement.'; card.classList.add('locked'); }
-      else { title.textContent = a.title; desc.textContent = a.desc; }
-      const progressWrap = document.createElement('div'); progressWrap.className='progressBarWrap';
-      const progress = document.createElement('div'); progress.className='progressBar';
-      let pct = 0;
-      if (a.id==='ach1') pct = Math.min(1, asteroidsDestroyed/5);
-      else if (a.id==='ach3') pct = Math.min(1, asteroidsDestroyed/20);
-      else if (a.id==='ach4') pct = Math.min(1, asteroidsDestroyed/50);
-      else if (a.id==='ach8') pct = Math.min(1, totalMoneyEarned/100);
-      else if (a.id==='ach9') pct = Math.min(1, totalMoneyEarned/500);
-      else if (a.id==='ach7') pct = Math.min(1, upgradesPurchased/5);
-      else if (a.id==='ach10') pct = Math.min(1, secondsPlayed/300);
-      else if (a.id==='ach14') pct = Math.min(1, totalEvents/10);
-      else if (a.id==='ach12') pct = Math.min(1, allyCount/3);
-      else pct = (a.unlocked?1:0);
-      progress.style.width = `${Math.floor(pct*100)}%`;
-      progressWrap.appendChild(progress);
+    const title = document.createElement('div'); title.className = 'achievement-title'; title.style.fontWeight='700';
+    const desc = document.createElement('div'); desc.className = 'achievement-desc'; desc.style.opacity='.9';
+    if (!a.unlocked && a.hiddenTitle){ title.textContent='??????'; desc.textContent='Unlock to reveal this achievement.'; }
+    else { title.textContent = a.title; desc.textContent = a.desc; }
 
-      const statusRow = document.createElement('div'); statusRow.style.display='flex'; statusRow.style.justifyContent='space-between'; statusRow.style.alignItems='center'; statusRow.style.marginTop='8px';
-      const rewardText = document.createElement('div'); rewardText.style.fontSize='12px'; rewardText.style.opacity='.9'; rewardText.textContent = `Reward: $${a.reward}`;
-      const claimBtn = document.createElement('button'); claimBtn.className='claimButton'; claimBtn.textContent = a.claimed ? 'Claimed' : `Claim ($${a.reward})`; claimBtn.disabled = !a.unlocked || a.claimed;
-      claimBtn.addEventListener('click', ()=>{
-        if (a.unlocked && !a.claimed){ money += a.reward; totalMoneyEarned += a.reward; a.claimed = true; updateStatsUI(); renderAchievements(); maybeUnlockSecret('achievement_unlocked'); }
-      });
+    const progressWrap = document.createElement('div'); progressWrap.className='progressBarWrap';
+    const progress = document.createElement('div'); progress.className='progressBar';
+    let pct = 0;
+    if (a.id==='ach1') pct = Math.min(1, asteroidsDestroyed/5);
+    else if (a.id==='ach3') pct = Math.min(1, asteroidsDestroyed/20);
+    else if (a.id==='ach4') pct = Math.min(1, asteroidsDestroyed/50);
+    else if (a.id==='ach8') pct = Math.min(1, totalMoneyEarned/100);
+    else if (a.id==='ach9') pct = Math.min(1, totalMoneyEarned/500);
+    else if (a.id==='ach7') pct = Math.min(1, upgradesPurchased/5);
+    else if (a.id==='ach10') pct = Math.min(1, secondsPlayed/300);
+    else pct = (a.unlocked?1:0);
+    progress.style.width = `${Math.floor(pct*100)}%`;
+    progressWrap.appendChild(progress);
 
-      card.appendChild(title); card.appendChild(desc); card.appendChild(progressWrap);
-      statusRow.appendChild(rewardText); statusRow.appendChild(claimBtn); card.appendChild(statusRow);
-      achievementsList.appendChild(card);
-    });
-  }
+    const statusRow = document.createElement('div'); statusRow.style.display='flex'; statusRow.style.justifyContent='space-between'; statusRow.style.alignItems='center'; statusRow.style.marginTop='8px';
+    const rewardText = document.createElement('div'); rewardText.style.fontSize='12px'; rewardText.style.opacity='.9'; rewardText.textContent = `Reward: $${a.reward}`;
+    const claimBtn = document.createElement('button'); claimBtn.className='claimButton'; claimBtn.textContent = a.claimed ? 'Claimed' : `Claim ($${a.reward})`; claimBtn.disabled = !a.unlocked || a.claimed;
+    claimBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); if (a.unlocked && !a.claimed){ money += a.reward; totalMoneyEarned += a.reward; a.claimed = true; updateStatsUI(); renderAchievements(); maybeUnlockSecret('achievement_unlocked'); } });
 
-  function renderSecrets(){
-    secretsList.innerHTML = '';
-    secrets.forEach(s=>{
-      const card = document.createElement('div'); card.className='secret-card';
-      const img = document.createElement('div'); img.className='secret-image'; img.textContent = s.revealed ? s.image : '???'; if(!s.revealed) img.classList.add('locked');
-      const text = document.createElement('div'); text.style.flex='1';
-      const t = document.createElement('div'); t.className='secret-title'; t.textContent = s.revealed ? s.name : '??????';
-      const sub = document.createElement('div'); sub.className='secret-sub'; sub.textContent = s.revealed ? `Discovered: ${s.hint}` : 'Locked secret - discover by playing!';
-      text.appendChild(t); text.appendChild(sub);
-      const btn = document.createElement('button'); btn.className='secret-button'; btn.textContent = s.collected ? 'Collected' : (s.revealed ? `Collect ($${s.reward})` : 'Locked'); btn.disabled = !s.revealed || s.collected;
-      btn.addEventListener('click', ()=>{ if (s.revealed && !s.collected){ money += s.reward; totalMoneyEarned += s.reward; s.collected = true; updateStatsUI(); renderSecrets(); maybeUnlockSecret('secret_collected'); } });
-      card.appendChild(img); card.appendChild(text); card.appendChild(btn);
-      secretsList.appendChild(card);
-    });
-  }
+    card.appendChild(title); card.appendChild(desc); card.appendChild(progressWrap);
+    statusRow.appendChild(rewardText); statusRow.appendChild(claimBtn); card.appendChild(statusRow);
+    achievementsList.appendChild(card);
+  });
+}
 
-  function checkAchievements(){
-    let any=false;
-    achievements.forEach(a=>{
-      if(!a.unlocked){
-        if(typeof a.condition === 'function' && a.condition()){ a.unlocked = true; any = true; }
-        else if(a.special && a.special.type === 'speed_kill'){ /* handled on kill */ }
-        else if(a.id==='ach15' && a.condition()){ a.unlocked = true; any = true; }
-      }
-    });
-    if(any) renderAchievements();
-  }
+/* ---- Secrets rendering (original panel style) ---- */
+function renderSecrets(){
+  secretsList.innerHTML = '';
+  secrets.forEach(s=>{
+    const card = document.createElement('div'); card.className='secret-card';
+    const img = document.createElement('div'); img.className='secret-image'; img.textContent = s.revealed ? s.image : '???'; if(!s.revealed) img.classList.add('locked');
+    const text = document.createElement('div'); text.style.flex='1';
+    const t = document.createElement('div'); t.className='secret-title'; t.textContent = s.revealed ? s.name : '??????';
+    const sub = document.createElement('div'); sub.className='secret-sub'; sub.textContent = s.revealed ? `Discovered: ${s.hint}` : 'Locked secret - discover by playing!';
+    const btn = document.createElement('button'); btn.className='claimButton'; btn.textContent = s.collected ? 'Collected' : (s.revealed ? `Collect ($${s.reward})` : 'Locked'); btn.disabled = !s.revealed || s.collected;
+    btn.addEventListener('click',(ev)=>{ ev.stopPropagation(); if (s.revealed && !s.collected){ money += s.reward; totalMoneyEarned += s.reward; s.collected = true; updateStatsUI(); renderSecrets(); maybeUnlockSecret('secret_collected'); } });
+    text.appendChild(t); text.appendChild(sub);
+    card.appendChild(img); card.appendChild(text); card.appendChild(btn);
+    secretsList.appendChild(card);
+  });
+}
 
-  function revealSecretById(id, revealName){
-    const s = secrets.find(x=>x.id===id); if(!s) return; if(!s.revealed){ s.revealed = true; if(revealName) s.name = revealName; renderSecrets(); }
-  }
+/* ---- Secret helpers ---- */
+function revealSecretById(id, revealName){
+  const s = secrets.find(x=>x.id===id); if(!s) return; if(!s.revealed){ s.revealed = true; if(revealName) s.name = revealName; renderSecrets(); }
+}
+function maybeUnlockSecret(trigger){
+  if (trigger === 'purchase' || trigger === 'first_upgrade'){ if (!secrets[1].revealed) revealSecretById('s2','Forged in Fire'); }
+  if (trigger === 'first_asteroid'){ if (!secrets[0].revealed) revealSecretById('s1','First Light'); }
+  if (trigger === 'alien_clicked'){ if (!secrets[2].revealed) revealSecretById('s3','Alien Relic'); }
+}
 
-  function maybeUnlockSecret(trigger){
-    if (trigger === 'purchase' || trigger === 'first_upgrade') {
-      if (!secrets[1].revealed) revealSecretById('s2','Forged in Fire');
-      if (!secrets[2].revealed && Math.random() < 0.12) revealSecretById('s3','Hidden Pebble');
-    } else if (trigger === 'random_hit' || trigger === 'first_asteroid') {
-      if (trigger === 'first_asteroid' && !secrets[0].revealed) revealSecretById('s1','First Light');
-      if (!secrets[2].revealed && Math.random() < 0.08) revealSecretById('s3','Hidden Pebble');
-      if (!secrets[5].revealed && Math.random() < 0.02) revealSecretById('s6','Lucky Fragment');
-    } else if (trigger === 'time_played') {
-      if (!secrets[3].revealed && secondsPlayed >= 300) revealSecretById('s4','Hidden Transmission');
-      if (!secrets[2].revealed && secondsPlayed >= 60 && Math.random() < 0.05) revealSecretById('s3','Hidden Pebble');
-    } else if (trigger === 'earn_money') {
-      if (!secrets[4].revealed && totalMoneyEarned >= 500) revealSecretById('s5','Hidden Fortune');
-    } else if (trigger === 'achievement_unlocked') {
-      const unlockedCount = achievements.filter(a=>a.unlocked).length;
-      if (!secrets[6].revealed && unlockedCount >= 5) revealSecretById('s7','The Overseer');
-      if (!secrets[8].revealed && secrets.filter(s=>s.revealed).length >= 9) revealSecretById('s9',"Collector's Echo");
-    } else if (trigger === 'secret_collected') {
-      const collectedCount = secrets.filter(s=>s.collected).length;
-      if (!secrets[8].revealed && collectedCount >= 9) revealSecretById('s9',"Collector's Echo");
-    } else if (trigger === 'rare_random') {
-      if (!secrets[5].revealed && Math.random() < 0.007) revealSecretById('s6','Lucky Fragment');
-    }
-
-    if (!secrets[7].revealed && asteroidsDestroyed >= 100) revealSecretById('s8','Enduring Impact');
-    if (!secrets[9].revealed && achievements.every(a=>a.unlocked) && secrets.every(s=>s.revealed)) revealSecretById('s10','Everything Revealed');
-    if (!secrets[8].revealed && secrets.filter(s=>s.revealed).length >= 9) revealSecretById('s9',"Collector's Echo");
-  }
-
-  function unlockSecret(key){ maybeUnlockSecret(key); }
-
-  const SCANNER_PROB_TABLE = {
-    0: [{ id:'normal', p:1 }],
-    1: [{ id:'normal', p:0.8 }, { id:'green', p:0.2 }],
-    2: [{ id:'normal', p:0.6 }, { id:'green', p:0.25 }, { id:'blue', p:0.15 }],
-    3: [{ id:'normal', p:0.4 }, { id:'green', p:0.3 }, { id:'blue', p:0.2 }, { id:'purple', p:0.1 }]
+/* ---------- visuals mapping for scanner ---------- */
+function getScannerVisual(level){
+  const map = {
+    1:{ tintType:'color', tintValue:'#8b8b8b' },
+    2:{ tintType:'color', tintValue:'#ff4d4d' },
+    3:{ tintType:'color', tintValue:'#ff8c00' },
+    4:{ tintType:'color', tintValue:'#ffd700' },
+    5:{ tintType:'color', tintValue:'#4caf50' },
+    6:{ tintType:'color', tintValue:'#2196f3' },
+    7:{ tintType:'color', tintValue:'#3f51b5' },
+    8:{ tintType:'color', tintValue:'#9b59b6' },
+    9:{ tintType:'rainbow', tintValue:null }
   };
+  const lvl = Math.max(1, Math.min(9, Number(level) || 1));
+  return map[lvl] || map[1];
+}
 
-  function chooseAsteroidType(scannerLevel){
-    const level = Math.max(0, Math.min(3, scannerLevel));
-    const table = SCANNER_PROB_TABLE[level] || SCANNER_PROB_TABLE[3];
-    const r = Math.random();
-    let acc = 0;
-    for (let i=0;i<table.length;i++){
-      acc += table[i].p;
-      if (r <= acc) {
-        const picked = ASTEROID_TYPES.find(t => t.id === table[i].id);
-        return Object.assign({}, picked);
+/* ---------- spawn helpers ---------- */
+function randomEdgePosition(rect){
+  const edge = Math.floor(Math.random()*4);
+  let x,y,dx,dy;
+  switch(edge){
+    case 0: x = Math.random()*(rect.width-56); y = 50; dx = (Math.random()-0.5)*2; dy = 0.6; break;
+    case 1: x = rect.width - 56; y = Math.random()*(rect.height-56-50) + 50; dx = -0.8; dy = (Math.random()-0.5)*2; break;
+    case 2: x = Math.random()*(rect.width-56); y = rect.height - 56; dx = (Math.random()-0.5)*2; dy = -0.6; break;
+    default: x = 0; y = Math.random()*(rect.height-56-50) + 50; dx = 0.8; dy = (Math.random()-0.5)*2; break;
+  }
+  const MIN_SPEED = 0.18, MAX_SPEED = 0.6;
+  const speed = MIN_SPEED + Math.random()*(MAX_SPEED-MIN_SPEED);
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  dx = (dx/len)*speed; dy = (dy/len)*speed;
+  return { x,y,dx,dy };
+}
+function removeEntityById(id){ const ent = activeMap.get(id); if (!ent) return; if (ent.el && ent.el.remove) ent.el.remove(); activeMap.delete(id); }
+
+/* value & hp scaling */
+function payoutForBase(base){
+  const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0));
+  return Math.max(1, Math.round(base * valueMult));
+}
+function hpForBase(baseHp){
+  const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0));
+  return Math.max(1, Math.round(baseHp * valueMult));
+}
+
+/* weapon damage scaling: 1.5x per weapon upgrade */
+function getPlayerDamage(){
+  const baseDamage = 1;
+  const mult = Math.pow(1.5, Math.max(0, upgrades.weapon || 0));
+  return Math.max(1, Math.floor(baseDamage * mult));
+}
+
+/* event state */
+let solarFlareActive = false, solarFlareExpiresAt = 0, solarFlareTimer = null;
+let blackHoleActive = false, blackHoleExpiresAt = 0, blackHoleTimer = null;
+
+/* show event popup */
+function showEventPopup(text, color='#fff'){
+  alienPopup.textContent = text;
+  alienPopup.style.color = color;
+  alienPopup.classList.add('show');
+  alienPopup.setAttribute('aria-hidden','false');
+  setTimeout(()=>{ alienPopup.classList.remove('show'); alienPopup.setAttribute('aria-hidden','true'); }, 1600);
+}
+
+/* ---------- asteroid creation & click handling ---------- */
+function pickDisplayLevelForSpawn(){
+  const scanner = Math.max(0, upgrades.scanner || 0);
+  const maxDisplay = Math.min(9, scanner + 1);
+  const chosen = 1 + Math.floor(Math.random()*maxDisplay);
+  return chosen;
+}
+function gameplayTypeForDisplayLevel(displayLevel){
+  const idx = Math.max(1, Math.min(9, displayLevel)) - 1;
+  return ASTEROID_TYPES[idx] || ASTEROID_TYPES[0];
+}
+
+function createAsteroid(options){
+  if (isPaused) return;
+  const currentAsteroids = [...activeMap.values()].filter(e=>e.kind==='asteroid').length;
+  if (currentAsteroids >= maxActive) return;
+  const rect = gameArea.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const pos = randomEdgePosition(rect);
+
+  // small chance for alien instead of asteroid
+  if (Math.random() < ALIEN_SPAWN_CHANCE){
+    createAlien(pos);
+    return;
+  }
+
+  const displayLevel = options && options.displayLevel ? options.displayLevel : pickDisplayLevelForSpawn();
+  const type = options && options.typeOverride ? options.typeOverride : gameplayTypeForDisplayLevel(displayLevel);
+
+  const id = nextEntityId++;
+  const el = document.createElement('div'); el.className='circle';
+  el.dataset.eid = String(id);
+  el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
+  el.title = `${type.label}`;
+
+  const hpBar = document.createElement('div'); hpBar.className='hp-bar';
+  const hpInner = document.createElement('div'); hpInner.className='hp-bar-inner';
+  hpBar.appendChild(hpInner);
+  const hpText = document.createElement('div'); hpText.style.pointerEvents='none'; hpText.style.fontSize='11px'; hpText.style.textShadow='0 1px 1px rgba(0,0,0,0.6)';
+  el.appendChild(hpBar); el.appendChild(hpText);
+
+  const hpVal = hpForBase(type.hp || 10);
+  const rewardVal = payoutForBase(type.reward || 1);
+  const hpObj = { hp: hpVal, maxHp: hpVal, reward: rewardVal, typeId: type.id, label: type.label, displayLevel };
+
+  // tint
+  const visual = getScannerVisual(Math.min(9, hpObj.displayLevel));
+  const tintDiv = document.createElement('div'); tintDiv.className = 'tint';
+  if (visual.tintType === 'color'){ tintDiv.style.background = visual.tintValue; } else if (visual.tintType === 'rainbow'){ tintDiv.classList.add('rainbow'); }
+  el.appendChild(tintDiv);
+
+  function refreshHpUI(){
+    const pct = Math.max(0, hpObj.hp / hpObj.maxHp);
+    hpInner.style.width = `${Math.floor(pct*100)}%`;
+    hpText.textContent = Math.round(hpObj.hp);
+    el.style.filter = `brightness(${0.65 + pct*0.6})`;
+  }
+  refreshHpUI();
+
+  gameArea.appendChild(el);
+  activeMap.set(id, { id, el, x:pos.x, y:pos.y, dx:pos.dx, dy:pos.dy, hpObj, kind:'asteroid' });
+
+  el.addEventListener('click', (evt)=>{
+    evt.stopPropagation();
+    const ent = activeMap.get(id);
+    if (!ent || ent.kind !== 'asteroid') return;
+
+    if (solarFlareActive){
+      const centerX = (ent.x + 28);
+      const centerY = (ent.y + 28);
+      spawnExplosion(centerX, centerY);
+
+      const explosionDmg = Math.max(1, Math.floor(getPlayerDamage() * 2));
+      for (const [oid, other] of Array.from(activeMap.entries())){
+        if (other.kind === 'asteroid' && other.hpObj){
+          other.hpObj.hp = Math.max(0, other.hpObj.hp - explosionDmg);
+          const hpIn = other.el.querySelector('.hp-bar-inner'); const hpText2 = other.el.querySelector('div[style*="pointer-events"]');
+          if (hpIn) hpIn.style.width = `${Math.floor((other.hpObj.hp/other.hpObj.maxHp)*100)}%`;
+          if (hpText2) hpText2.textContent = Math.round(other.hpObj.hp);
+          if (other.hpObj.hp <= 0){
+            money += other.hpObj.reward; totalMoneyEarned += other.hpObj.reward; asteroidsDestroyed++; totalEvents++;
+            removeEntityById(oid);
+          }
+        }
       }
+      updateStatsUI(); renderAchievements(); renderSecrets();
+      return;
     }
-    return Object.assign({}, ASTEROID_TYPES[0]);
-  }
 
-  function randomEdgePosition(rect){
-    const edge = Math.floor(Math.random()*4);
-    let x,y,dx,dy;
-    switch(edge){
-      case 0: x = Math.random()*(rect.width-48); y = menuHeight; dx = (Math.random()-0.5)*2; dy = 1; break;
-      case 1: x = rect.width - 48; y = Math.random()*(rect.height-48-menuHeight) + menuHeight; dx = -1; dy = (Math.random()-0.5)*2; break;
-      case 2: x = Math.random()*(rect.width-48); y = rect.height - 48; dx = (Math.random()-0.5)*2; dy = -1; break;
-      default: x = 0; y = Math.random()*(rect.height-48-menuHeight) + menuHeight; dx = 1; dy = (Math.random()-0.5)*2; break;
-    }
-    const MIN_SPEED = 0.18, MAX_SPEED = 0.6;
-    const speed = MIN_SPEED + Math.random()*(MAX_SPEED-MIN_SPEED);
-    const len = Math.sqrt(dx*dx + dy*dy) || 1;
-    dx = (dx/len)*speed; dy = (dy/len)*speed;
-    return { x,y,dx,dy };
-  }
-
-  function createMovingCircle(options){
-    if (isPaused) return;
-    if (activeCircles.length >= MAX_ACTIVE_ASTEROIDS) return;
-    const rect = gameArea.getBoundingClientRect();
-    const { x,y,dx,dy } = randomEdgePosition(rect);
-    let posX = x, posY = y;
-
-    const type = options && options.typeOverride ? options.typeOverride : chooseAsteroidType(upgrades.scanner);
-
-    const circle = document.createElement('div'); circle.className='circle';
-    circle.style.left = `${posX}px`; circle.style.top = `${posY}px`;
-    circle.style.backgroundColor = type.color;
-    circle.title = `${type.label}`;
-
-    const hpBar = document.createElement('div'); hpBar.className='hp-bar';
-    const hpInner = document.createElement('div'); hpInner.className='hp-bar-inner';
-    hpBar.appendChild(hpInner);
-    const hpText = document.createElement('div'); hpText.style.pointerEvents='none'; hpText.style.fontSize='11px'; hpText.style.textShadow='0 1px 1px rgba(0,0,0,0.6)';
-    circle.appendChild(hpBar); circle.appendChild(hpText);
-
-    const hpVal = (options && typeof options.hpOverride === 'number') ? options.hpOverride : (type.hp || DEFAULT_ASTEROID_HP);
-    const baseReward = (options && typeof options.rewardOverride === 'number') ? options.rewardOverride : (type.reward || 1);
-    const rewardVal = payoutForBase(baseReward);
-
-    const hpObj = { hp: hpVal, maxHp: hpVal, reward: rewardVal, typeId: type.id, label: type.label };
-
-    function refreshHpUI(){
-      const pct = Math.max(0, hpObj.hp / hpObj.maxHp);
-      hpInner.style.width = `${Math.floor(pct*100)}%`;
-      hpText.textContent = Math.round(hpObj.hp);
-      circle.style.filter = `brightness(${0.65 + pct*0.6})`;
-    }
-    refreshHpUI();
-
-    circle.addEventListener('click', (evt)=>{
-      evt.stopPropagation();
-      const dmg = 1 + (Number(weaponLevel) || 0);
-      hpObj.hp = Math.max(0, Number(hpObj.hp) - dmg);
-      if (MONEY_PER_HIT > 0){ money += MONEY_PER_HIT; totalMoneyEarned += MONEY_PER_HIT; }
+    const dmg = getPlayerDamage();
+    ent.hpObj.hp = Math.max(0, ent.hpObj.hp - dmg);
+    if (ent.hpObj.hp <= 0){
+      money += ent.hpObj.reward; totalMoneyEarned += ent.hpObj.reward; asteroidsDestroyed += 1; totalEvents += 1;
+      updateStatsUI();
+      recentKillsTimestamps.push(Date.now());
+      const now = Date.now();
+      recentKillsTimestamps = recentKillsTimestamps.filter(t => now - t <= 10000);
+      achievements.forEach(a=>{ if (!a.unlocked && typeof a.condition === 'function' && a.condition()) a.unlocked = true; });
+      maybeUnlockSecret('random_hit');
+      if (asteroidsDestroyed === 1) maybeUnlockSecret('first_asteroid');
+      removeEntityById(id);
+      renderAchievements(); renderSecrets();
+    } else {
       refreshHpUI();
-
-      if (hpObj.hp <= 0){
-        const rewardGiven = Math.round(hpObj.reward);
-        money += rewardGiven;
-        totalMoneyEarned += rewardGiven;
-        asteroidsDestroyed += 1;
-        totalEvents += 1;
-        moneyDisplay.textContent = `Money: $${money}`;
-        updateStatsUI();
-
-        recentKillsTimestamps.push(Date.now());
-        const now = Date.now();
-        recentKillsTimestamps = recentKillsTimestamps.filter(t => now - t <= 10000);
-        const ach11 = achievements.find(a=>a.id==='ach11');
-        if (!ach11.unlocked && recentKillsTimestamps.length >= (ach11.special?.needed || 3)) {
-          ach11.unlocked = true; ach11.hiddenTitle = false; renderAchievements(); maybeUnlockSecret('achievement_unlocked');
-        }
-
-        checkAchievements();
-        unlockSecret('random_hit');
-        unlockSecret('earn_money');
-        if (asteroidsDestroyed === 1) unlockSecret('first_asteroid');
-        if (Math.random() < 0.01) unlockSecret('rare_random');
-
-        circle.remove();
-        activeCircles = activeCircles.filter(c => c.el !== circle);
-      }
-    });
-
-    gameArea.appendChild(circle);
-    activeCircles.push({ el: circle, x: posX, y: posY, dx, dy, hpObj });
-  }
-
-  function animateCircles(){
-    const rect = gameArea.getBoundingClientRect();
-    for (let i = activeCircles.length - 1; i >= 0; i--){
-      const c = activeCircles[i];
-        if (!isPaused) {
-      c.x += c.dx; c.y += c.dy;
-      c.el.style.left = `${c.x}px`; c.el.style.top = `${c.y}px`;
-        }
-      if (c.x < -80 || c.x > rect.width + 80 || c.y < menuHeight - 80 || c.y > rect.height + 80){
-        c.el.remove(); activeCircles.splice(i,1);
-      }
-    }
-    requestAnimationFrame(animateCircles);
-  }
-
-  function startTimer(){
-    if (timerInterval) return;
-    timerInterval = setInterval(()=>{
-      if (isPaused) return; // <-- skip everything while paused
-      secondsPlayed++; updateStatsUI();
-      const scannerFactor = 1 + (0.18 * upgrades.scanner);
-      const effectiveSpawnProb = Math.min(0.9, BASE_SPAWN_PROB * scannerFactor);
-      if (Math.random() < effectiveSpawnProb){
-        if (activeCircles.length < MAX_ACTIVE_ASTEROIDS) createMovingCircle();
-      }
-    }, BASE_SPAWN_INTERVAL_MS);
-  }
-
-  pauseButton.addEventListener("click", () => {
-  isPaused = !isPaused;
-  pauseButton.textContent = isPaused ? " Resume" : " Pause";
-  const gameArea = document.getElementById("gameArea");
-  gameArea.style.opacity = isPaused ? "0.5" : "1";
-  if (!isPaused) {
-    createMovingCircle();
-  }
-});
-
-  shopToggle.addEventListener('click', (e)=>{
-    storeMenu.style.display = storeMenu.style.display === 'block' ? 'none' : 'block';
-    e.stopPropagation();
-  });
-  statsToggle.addEventListener('click', (e)=>{ statsMenu.style.display = statsMenu.style.display === 'block' ? 'none' : 'block'; e.stopPropagation(); });
-  achToggle.addEventListener('click', (e)=>{
-    const visible = achievementsMenu.style.display === 'block';
-    achievementsMenu.style.display = visible ? 'none' : 'block';
-    if (!visible){ renderAchievements(); renderSecrets(); }
-    e.stopPropagation();
-  });
-
-  settingsBtn.addEventListener("click", (e) => {
-   e.stopPropagation(); // prevent click from closing immediately
-   const isVisible = settingsMenu.style.display === "block";
-  settingsMenu.style.display = isVisible ? "none" : "block";
-  });
-  
-
-  document.addEventListener('click', (e)=>{
-    if (storeMenu.style.display === 'block' && !storeMenu.contains(e.target) && e.target !== shopToggle) {
-      storeMenu.style.display = 'none';
-    }
-    if (statsMenu.style.display === 'block' && !statsMenu.contains(e.target) && e.target !== statsToggle) {
-      statsMenu.style.display = 'none';
-    }
-    if (achievementsMenu.style.display === 'block' && !achievementsMenu.contains(e.target) && e.target !== achToggle) {
-      achievementsMenu.style.display = 'none';
-      secretsPanel.classList.remove('open');
-      secretsPanel.setAttribute('aria-hidden','true');
-    }
-    if (secretsPanel.classList.contains('open') && !secretsPanel.contains(e.target) && !achievementsMenu.contains(e.target) && e.target !== viewSecretsBtn) {
-      secretsPanel.classList.remove('open');
-      secretsPanel.setAttribute('aria-hidden','true');
     }
   });
+}
 
-  [storeMenu, statsMenu, achievementsMenu, secretsPanel].forEach(el=>{
-    el.addEventListener('click', (ev)=>{ ev.stopPropagation(); });
-  });
+function spawnExplosion(x,y){
+  const ex = document.createElement('div'); ex.className='explosion';
+  ex.style.left = `${x}px`; ex.style.top = `${y}px`; gameArea.appendChild(ex);
+  setTimeout(()=>{ ex.style.transform = 'translate(-50%,-50%) scale(2.2)'; ex.style.opacity = '0'; }, 20);
+  setTimeout(()=>{ ex.remove(); }, 420);
+}
 
-  closeAchievements.addEventListener('click', ()=>{ achievementsMenu.style.display = 'none'; secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); });
-  viewSecretsBtn.addEventListener('click', ()=>{ secretsPanel.classList.add('open'); secretsPanel.setAttribute('aria-hidden','false'); });
-  closeSecrets.addEventListener('click', ()=>{ secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); });
+/* ---------- alien ---------- */
+function createAlien(pos){
+  const id = nextEntityId++;
+  const el = document.createElement('div'); el.className = 'alien';
+  el.dataset.eid = String(id);
+  el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
+  gameArea.appendChild(el);
+  activeMap.set(id, { id, el, x:pos.x, y:pos.y, dx:(pos.dx||0.4)*1.2, dy:(pos.dy||0.2)*1.2, kind:'alien' });
 
-  function fmt(n){ return Number(n).toFixed(0); }
-
-  document.querySelectorAll('.buyButton').forEach(button=>{
-    button.dataset.cost = String(Number(button.dataset.cost) || 10);
-    button.dataset.level = String(Number(button.dataset.level) || 1);
-    button.dataset.purchases = String(Number(button.dataset.purchases) || 0);
-    button.dataset.origText = button.textContent.trim();
-
-    function updateButtonLabel(btn){
-      const type = btn.dataset.type;
-      const cost = Number(btn.dataset.cost);
-      const purchases = Number(btn.dataset.purchases);
-      if (type === 'weapon'){
-        btn.textContent = `Laser Lv${upgrades.weapon + 1} - $${fmt(cost)}`;
-      } else if (type === 'scanner'){
-        btn.textContent = `Radar Next Lv${upgrades.scanner + 1} - $${fmt(cost)}`;
-      } else if (type === 'value'){
-        btn.textContent = `Value Lv${purchases + 1} - $${fmt(cost)}`;
-      } else {
-        btn.textContent = `${btn.dataset.origText} - $${fmt(cost)}`;
-      }
-    }
-    updateButtonLabel(button);
-
-    button.addEventListener('click', (e)=>{
-      if (button.disabled) return;
-      const cost = Number(button.dataset.cost);
-      const type = button.dataset.type;
-      let purchases = Number(button.dataset.purchases);
-
-      if (money >= cost) {
-        money -= cost;
-        moneySpent += cost;
-        upgradesPurchased += 1;
-        purchases += 1;
-        button.dataset.purchases = String(purchases);
-
-        if (type === 'weapon') {
-          upgrades.weapon = upgrades.weapon + 1;
-          weaponLevel = upgrades.weapon;
-        } else if (type === 'scanner') {
-          upgrades.scanner = upgrades.scanner + 1;
-        } else if (type === 'value') {
-          upgrades.value = upgrades.value + 1;
-        }
-
-        const nextCost = Math.max(1, Math.round(cost * COST_GROWTH));
-        button.dataset.cost = String(nextCost);
-        button.dataset.level = String(Number(button.dataset.level) + 1);
-
-        updateStatsUI();
-        updateButtonLabel(button);
-
-        totalEvents++;
-        checkAchievements();
-        maybeUnlockSecret('purchase');
-        if (upgrades.weapon + upgrades.scanner + upgrades.value === 1) maybeUnlockSecret('first_upgrade');
-        renderAchievements(); renderSecrets();
-      } else {
-        button.style.transform = 'scale(0.98)';
-        setTimeout(()=>{ button.style.transform = ''; }, 120);
-      }
-
-      e.stopPropagation();
-    });
-  });
-  
-  document.addEventListener("DOMContentLoaded", () => {
-  loadGame();
-});
-
-  setInterval(()=>{
-    checkAchievements();
-    maybeUnlockSecret('time_played');
-    maybeUnlockSecret('earn_money');
-    renderAchievements();
+  el.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    revealSecretById('s3','Alien Relic');
+    handleAlienClick();
+    removeEntityById(id);
     renderSecrets();
-  }, 2000);
-
-  startButton.addEventListener('click', ()=>{
-    startTimer();
-    startScreen.style.display = 'none';
-    gameArea.style.display = 'block';
-    activeCircles = [];
-    createMovingCircle();
-    createMovingCircle();
-    animateCircles();
-    updateStatsUI();
-  });
-
-  saveButton.addEventListener("click", () => {
-
-  const upgradeButtonCosts = {};
-  document.querySelectorAll('.buyButton').forEach(btn => {
-    const type = btn.dataset.type;
-    upgradeButtonCosts[type] = {
-      cost: btn.dataset.cost,
-      purchases: btn.dataset.purchases || "0"
-    };
-  });
-
-  const saveData = {
-    money,
-    weaponLevel,
-    upgrades,
-    asteroidsDestroyed,
-    secondsPlayed,
-    totalMoneyEarned,
-    moneySpent,
-    upgradesPurchased,
-    totalEvents,
-    allyCount,
-    upgradeButtonCosts,  
-
-     achievementsState: achievements.map(a => ({
-    id: a.id,
-    unlocked: a.unlocked,
-    claimed: a.claimed,
-    hiddenTitle: a.hiddenTitle
-  })),
-
-  secretsState: secrets.map(s => ({
-    id: s.id,
-    revealed: s.revealed,
-    collected: s.collected
-  }))
-  };
-
-  localStorage.setItem("myGameSave", JSON.stringify(saveData));
-  alert("Game saved!");
-});
-
-  function loadGame() {
-  const saved = localStorage.getItem("myGameSave");
-  if (saved) {
-    const data = JSON.parse(saved);
-
-    money = data.money || 0;
-    weaponLevel = data.weaponLevel || 0;
-    upgrades = data.upgrades || { weapon:0, scanner:0, value:0 };
-    asteroidsDestroyed = data.asteroidsDestroyed || 0;
-    secondsPlayed = data.secondsPlayed || 0;
-    totalMoneyEarned = data.totalMoneyEarned || 0;
-    moneySpent = data.moneySpent || 0;
-    upgradesPurchased = data.upgradesPurchased || 0;
-    totalEvents = data.totalEvents || 0;
-    allyCount = data.allyCount || 0; 
-
-    
-    if (data.upgradeButtonCosts) {
-      document.querySelectorAll('.buyButton').forEach(btn => {
-        const type = btn.dataset.type;
-        const savedObj = data.upgradeButtonCosts[type];
-        if (savedObj) {
-          if (savedObj.cost !== undefined) btn.dataset.cost = String(savedObj.cost);
-          if (savedObj.purchases !== undefined) btn.dataset.purchases = String(savedObj.purchases);
-        }
-      });
-    }
-
-    
-    document.querySelectorAll('.buyButton').forEach(btn => {
-      const type = btn.dataset.type;
-      const cost = Number(btn.dataset.cost || 0);
-      const purchases = Number(btn.dataset.purchases || 0);
-
-      if (type === 'weapon'){
-        btn.textContent = `Laser Lv${(upgrades.weapon || 0) + 1} - $${fmt(cost)}`;
-      } else if (type === 'scanner'){
-        btn.textContent = `Radar Next Lv${(upgrades.scanner || 0) + 1} - $${fmt(cost)}`;
-      } else if (type === 'value'){
-        btn.textContent = `Value Lv${purchases + 1} - $${fmt(cost)}`;
-      } else {
-        btn.textContent = (btn.dataset.origText ? btn.dataset.origText + ` - $${fmt(cost)}` : `Buy - $${fmt(cost)}`);
-      }
-    });
-
-    if (data.achievementsState) {
-  data.achievementsState.forEach(savedA => {
-    const a = achievements.find(x => x.id === savedA.id);
-    if (a) {
-      a.unlocked = !!savedA.unlocked;
-      a.claimed = !!savedA.claimed;
-      a.hiddenTitle = !!savedA.hiddenTitle;
-    }
   });
 }
-
-if (data.secretsState) {
-  data.secretsState.forEach(savedS => {
-    const s = secrets.find(x => x.id === savedS.id);
-    if (s) {
-      s.revealed = !!savedS.revealed;
-      s.collected = !!savedS.collected;
-    }
-  });
-}
-
+function handleAlienClick(){
+  totalEvents++;
+  const giveCash = Math.random() < 0.5;
+  if (giveCash){
+    const highestUnlocked = Math.min(9, (upgrades.scanner || 0) + 1);
+    const idx = Math.max(1, highestUnlocked) - 1;
+    const baseReward = ASTEROID_TYPES[idx] ? ASTEROID_TYPES[idx].reward : ASTEROID_TYPES[0].reward;
+    const amount = Math.round(5 * payoutForBase(baseReward));
+    money += amount; totalMoneyEarned += amount;
     updateStatsUI();
-    renderAchievements();
-    renderSecrets();
+    showEventPopup("ALIEN CASH","#00ff6a");
+  } else {
+    applyAllyBuff(10, 10000);
+    showEventPopup("ALIEN WEAPON SURGE","#00ff6a");
   }
 }
 
-  restartButton.addEventListener("click", () => {
-  restartConfirm.style.display = "block";
-});
-
-confirmNo.addEventListener("click", () => {
-  restartConfirm.style.display = "none";
-});
-
-  confirmYes.addEventListener("click", () => {
- 
-  money = 0; totalMoneyEarned = 0; moneySpent = 0; asteroidsDestroyed = 0; upgradesPurchased = 0; secondsPlayed = 0; totalEvents = 0; allyCount = 0; aliensDestroyed = 0; upgrades = { weapon: 0, scanner: 0, value: 0 }; weaponLevel = 0;
-
-  achievements.forEach(a => { a.unlocked = false; a.claimed = false; a.hiddenTitle = !!a.hiddenTitle; });
-  secrets.forEach(s => { s.revealed = false; s.collected = false; });
-  activeCircles.forEach(c => c.el.remove());
-  activeCircles = [];
-
-  document.querySelectorAll('.buyButton').forEach(btn => {
-    const type = btn.dataset.type;
-
-    if (type === "weapon") {
-      btn.dataset.cost = "10";
-      btn.dataset.purchases = "0";
-      btn.textContent = `Laser Lv1 - $10`;
-    } 
-    else if (type === "scanner") {
-      btn.dataset.cost = "15";
-      btn.dataset.purchases = "0";
-      btn.textContent = `Radar Lv1 - $15`;
-    } 
-    else if (type === "value") {
-      btn.dataset.cost = "25";
-      btn.dataset.purchases = "0";
-      btn.textContent = `Value Lv1 - $25`;
-    }
-  });
-
-  isPaused = false;
-  pauseButton.textContent = " Pause";
-  gameArea.style.opacity = "1";
-  clearInterval(timerInterval);
-  timerInterval = null;
-  startTimer();
-  createMovingCircle();
-  createMovingCircle();
-  
-});
-
+/* ---------- allies ---------- */
+function spawnAllies(){
+  const desired = Math.max(0, upgrades.allyCount || 0);
+  while (allyShips.length > desired){ const a = allyShips.pop(); a.el.remove(); clearInterval(a.fireIntervalId); }
+  while (allyShips.length < desired){
+    const idx = allyShips.length;
+    const el = document.createElement('div'); el.className='ally';
+    const centerX = gameArea.clientWidth/2 - 48 + (idx*36 % 120) - 60;
+    const centerY = gameArea.clientHeight/2 - 28 + (idx*18 % 40);
+    el.style.left = `${centerX}px`; el.style.top = `${centerY}px`;
+    gameArea.appendChild(el);
+    const ship = { el, x:centerX, y:centerY, idx, fireIntervalId:null };
+    allyShips.push(ship);
+    startAllyFiring(ship);
+  }
   updateStatsUI();
-  renderAchievements();
-  renderSecrets();
-  </script>
+}
+function startAllyFiring(ship){
+  if (ship.fireIntervalId) clearInterval(ship.fireIntervalId);
+  const intervalMs = 1000 / Math.max(0.01, allyShotsPerSecond());
+  ship.fireIntervalId = setInterval(()=>{ allyFireOnce(ship); }, Math.max(30, intervalMs));
+}
+function updateAlliesFiringRate(){ allyShips.forEach(s=>startAllyFiring(s)); updateStatsUI(); }
+function allyFireOnce(ship){
+  const asteroids = Array.from(activeMap.values()).filter(c=>c.kind==='asteroid');
+  if (!asteroids.length) return;
+  let best=null, bestd=Infinity;
+  const sx = ship.x + (96/2), sy = ship.y + (56/2);
+  for (const a of asteroids){ const ax = a.x+28, ay = a.y+28; const d = (ax-sx)*(ax-sx)+(ay-sy)*(ay-sy); if (d < bestd){ bestd = d; best = a; } }
+  if (!best) return;
+  const shot = document.createElement('div'); shot.className='ally-shot';
+  shot.style.left = `${ship.x + 48}px`; shot.style.top = `${ship.y + 28}px`;
+  gameArea.appendChild(shot);
+  const shotId = nextEntityId++;
+  activeMap.set(shotId, { id:shotId, el:shot, x:ship.x+48, y:ship.y+28, kind:'allyShot', targetId: best.id });
+  const tx = best.x + 28, ty = best.y + 28;
+  let sx0 = Number(shot.style.left.replace('px','')), sy0 = Number(shot.style.top.replace('px',''));
+  const vx = tx - sx0, vy = ty - sy0; const len = Math.sqrt(vx*vx+vy*vy)||1;
+  const vnx = (vx/len)*allyShotSpeed, vny = (vy/len)*allyShotSpeed;
+  const interval = setInterval(()=>{
+    sx0 += vnx; sy0 += vny; shot.style.left = `${sx0}px`; shot.style.top = `${sy0}px`;
+    const target = activeMap.get(best.id);
+    const tx2 = target ? (target.x + 28) : tx;
+    const ty2 = target ? (target.y + 28) : ty;
+    const dist2 = Math.hypot(tx2 - sx0, ty2 - sy0);
+    if (dist2 < 12 || sx0 < -200 || sy0 < -200 || sx0 > gameArea.clientWidth+200 || sy0 > gameArea.clientHeight+200){
+      const dmg = Math.max(1, Math.floor(getPlayerDamage()/2));
+      const realTarget = activeMap.get(best.id);
+      if (realTarget && realTarget.kind === 'asteroid' && realTarget.hpObj){
+        realTarget.hpObj.hp = Math.max(0, realTarget.hpObj.hp - dmg);
+        const hpIn = realTarget.el.querySelector('.hp-bar-inner');
+        const hpText = realTarget.el.querySelector('div[style*="pointer-events"]');
+        if (hpIn) hpIn.style.width = `${Math.floor((realTarget.hpObj.hp/realTarget.hpObj.maxHp)*100)}%`;
+        if (hpText) hpText.textContent = Math.round(realTarget.hpObj.hp);
+        if (realTarget.hpObj.hp <= 0){
+          money += realTarget.hpObj.reward; totalMoneyEarned += realTarget.hpObj.reward; asteroidsDestroyed++;
+          removeEntityById(realTarget.id);
+          updateStatsUI();
+        }
+      }
+      clearInterval(interval);
+      shot.remove();
+      activeMap.delete(shotId);
+    }
+  }, 16);
+}
+
+/* ---------- animate loop (black hole pull — improved, no shrink) ---------- */
+function animateLoop(){
+  const rect = gameArea.getBoundingClientRect();
+  const centerX = rect.width/2;
+  const centerY = rect.height/2;
+
+  for (const [id, ent] of Array.from(activeMap.entries())){
+    if (ent.kind === 'asteroid' || ent.kind === 'alien'){
+      if (blackHoleActive && ent.kind === 'asteroid'){
+        const toX = centerX - (ent.x + 28);
+        const toY = centerY - (ent.y + 28);
+        const dist = Math.sqrt(toX*toX + toY*toY) || 1;
+        const pullStrength = Math.min(0.65, 0.025 + (180 / (dist + 40)) * 0.01);
+        const desiredVx = (toX / dist) * pullStrength * 8;
+        const desiredVy = (toY / dist) * pullStrength * 8;
+        ent.dx = ent.dx * 0.86 + desiredVx * 0.14;
+        ent.dy = ent.dy * 0.86 + desiredVy * 0.14;
+        const maxVel = 1.6;
+        const sp = Math.sqrt(ent.dx*ent.dx + ent.dy*ent.dy) || 0;
+        if (sp > maxVel){ ent.dx = (ent.dx / sp) * maxVel; ent.dy = (ent.dy / sp) * maxVel; }
+        ent.dx *= 0.995; ent.dy *= 0.995;
+        // no shrinking transform applied
+      }
+
+      ent.x += ent.dx; ent.y += ent.dy;
+      ent.el.style.left = `${ent.x}px`; ent.el.style.top = `${ent.y}px`;
+    }
+    if (ent.x < -300 || ent.x > rect.width + 300 || ent.y < -300 || ent.y > rect.height + 300){
+      if (ent.el && ent.el.remove) ent.el.remove();
+      activeMap.delete(id);
+    }
+  }
+
+  allyShips.forEach((s, idx)=>{ const cx = gameArea.clientWidth/2 - 48 + (idx*36 % 120) - 60; const cy = gameArea.clientHeight/2 - 28 + Math.sin(Date.now()/800 + idx)*18; s.x = cx; s.y = cy; s.el.style.left = `${s.x}px`; s.el.style.top = `${s.y}px`; });
+
+  if (solarFlareActive){
+    const now = Date.now();
+    const remaining = solarFlareExpiresAt - now;
+    if (remaining <= 0){ endSolarFlare(); } else { solarOverlay.style.opacity = Math.min(1, 0.75); }
+  }
+
+  if (blackHoleActive){
+    const now = Date.now();
+    const remaining = blackHoleExpiresAt - now;
+    if (remaining <= 0){ endBlackHole(); } else { blackholeOverlay.style.opacity = Math.min(1, 0.75); }
+  }
+
+  requestAnimationFrame(animateLoop);
+}
+
+/* ---------- spawn timer ---------- */
+function startTimer(){
+  if (spawnTimer) return;
+  spawnTimer = setInterval(()=>{
+    if (isPaused) return;
+    secondsPlayed++; updateStatsUI();
+    const scannerFactor = 1 + (0.12 * (upgrades.scanner || 0));
+    const spawnFactor = 1 + (0.35 * (upgrades.spawn || 0));
+    const effectiveSpawnProb = Math.min(0.95, BASE_SPAWN_PROB * scannerFactor * spawnFactor);
+    maxActive = Math.max(DEFAULT_MAX_ACTIVE, DEFAULT_MAX_ACTIVE + (upgrades.spawn || 0) * 2);
+    const spawnsThisTick = (Date.now() < allyBuffExpiresAt) ? 2 + Math.floor(Math.random()*3) : 1;
+    if (Math.random() < effectiveSpawnProb){
+      for (let i=0;i<spawnsThisTick;i++){
+        const currentAsteroids = [...activeMap.values()].filter(e=>e.kind==='asteroid').length;
+        if (currentAsteroids < maxActive) createAsteroid();
+      }
+    }
+  }, BASE_SPAWN_INTERVAL_MS);
+}
+
+/* ---------- Store wiring ---------- */
+document.querySelectorAll('.buyButton').forEach(button=>{
+  button.dataset.cost = String(Number(button.dataset.cost) || 10);
+  button.dataset.purchases = String(Number(button.dataset.purchases) || 0);
+
+  function updateButtonLabel(btn){
+    const type = btn.dataset.type;
+    const tile = btn.closest('.store-tile');
+    if (!tile) return;
+    if (type === 'weapon') tile.querySelector('.store-level').textContent = String(upgrades.weapon || 0);
+    else if (type === 'scanner') tile.querySelector('.store-level').textContent = String(upgrades.scanner || 0);
+    else if (type === 'value') tile.querySelector('.store-level').textContent = String(upgrades.value || 0);
+    else if (type === 'spawn') tile.querySelector('.store-level').textContent = String(upgrades.spawn || 0);
+    else if (type === 'allyCount') tile.querySelector('.store-level').textContent = String(upgrades.allyCount || 0);
+    else if (type === 'allyRate') tile.querySelector('.store-level').textContent = String(upgrades.allyRate || 0);
+    const costTag = tile.querySelector('.store-cost'); if (costTag) costTag.textContent = `$${fmt(Number(btn.dataset.cost)||0)}`;
+  }
+  updateButtonLabel(button);
+
+  button.addEventListener('click', (e)=>{
+    e.stopPropagation(); e.preventDefault();
+    if (button.disabled) return;
+    const cost = Number(button.dataset.cost);
+    const type = button.dataset.type;
+    let purchases = Number(button.dataset.purchases);
+
+    if (money >= cost){
+      money -= cost; moneySpent += cost; upgradesPurchased += 1; purchases += 1; button.dataset.purchases = String(purchases);
+
+      if (type === 'weapon'){ upgrades.weapon = upgrades.weapon + 1; weaponLevel = upgrades.weapon; }
+      else if (type === 'scanner'){ upgrades.scanner = Math.min(9, upgrades.scanner + 1); }
+      else if (type === 'value'){ upgrades.value = upgrades.value + 1; }
+      else if (type === 'spawn'){ upgrades.spawn = upgrades.spawn + 1; }
+      else if (type === 'allyCount'){ upgrades.allyCount = upgrades.allyCount + 1; spawnAllies(); }
+      else if (type === 'allyRate'){ upgrades.allyRate = upgrades.allyRate + 1; updateAlliesFiringRate(); }
+
+      const nextCost = Math.max(1, Math.round(cost * 2));
+      button.dataset.cost = String(nextCost);
+      updateStatsUI();
+
+      if (type === 'scanner'){
+        if (upgrades.scanner >= 9){
+          if (scannerBuyBtn){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = "MAX"; scannerBuyBtn.style.background = "#555"; }
+        } else { if (scannerBuyBtn){ scannerBuyBtn.disabled = false; scannerBuyBtn.textContent = "Buy"; scannerBuyBtn.style.background = ""; } }
+      }
+
+      totalEvents++;
+      maybeUnlockSecret('purchase');
+      if (upgrades.weapon + upgrades.scanner + upgrades.value === 1) maybeUnlockSecret('first_upgrade');
+      renderAchievements(); renderSecrets();
+    } else {
+      button.style.transform = 'scale(0.98)';
+      setTimeout(()=>{ button.style.transform = ''; }, 120);
+    }
+  });
+});
+
+/* ---------- save/load ---------- */
+saveButton.addEventListener('click', (ev)=>{ ev.stopPropagation(); const saveData = { money,
+ weaponLevel, upgrades, asteroidsDestroyed, secondsPlayed, totalMoneyEarned, moneySpent, upgradesPurchased, totalEvents, allyCount: upgrades.allyCount||0 }; localStorage.setItem("myGameSave", JSON.stringify(saveData)); alert("Game saved!"); });
+function loadGame(){
+  const saved = localStorage.getItem("myGameSave");
+  if (saved){
+    try{
+      const data = JSON.parse(saved);
+      money = data.money || 0;
+      weaponLevel = data.weaponLevel || 0;
+      upgrades = data.upgrades || upgrades;
+      asteroidsDestroyed = data.asteroidsDestroyed || 0;
+      secondsPlayed = data.secondsPlayed || 0;
+      totalMoneyEarned = data.totalMoneyEarned || 0;
+      moneySpent = data.moneySpent || 0;
+      upgradesPurchased = data.upgradesPurchased || 0;
+      totalEvents = data.totalEvents || totalEvents;
+    }catch(e){}
+  }
+  document.querySelectorAll('.store-tile').forEach(tile=>{
+    const typeElem = tile.dataset.type;
+    const lvlSpan = tile.querySelector('.store-level');
+    if (lvlSpan){
+      if (typeElem === 'weapon') lvlSpan.textContent = String(upgrades.weapon || 0);
+      else if (typeElem === 'scanner') lvlSpan.textContent = String(upgrades.scanner || 0);
+      else if (typeElem === 'value') lvlSpan.textContent = String(upgrades.value || 0);
+      else if (typeElem === 'spawn') lvlSpan.textContent = String(upgrades.spawn || 0);
+      else if (typeElem === 'allyCount') lvlSpan.textContent = String(upgrades.allyCount || 0);
+      else if (typeElem === 'allyRate') lvlSpan.textContent = String(upgrades.allyRate || 0);
+    }
+  });
+  if (upgrades.scanner >= 9 && scannerBuyBtn){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = "MAX"; scannerBuyBtn.style.background="#555"; }
+  updateStatsUI();
+}
+
+/* ---------- menu toggles (do NOT close on buy/claim) ---------- */
+shopToggle.addEventListener('click', (ev)=>{ ev.stopPropagation(); storeMenu.style.display = storeMenu.style.display === 'block' ? 'none' : 'block'; });
+statsToggle.addEventListener('click', (ev)=>{ ev.stopPropagation(); statsMenu.style.display = statsMenu.style.display === 'block' ? 'none' : 'block'; });
+achToggle.addEventListener('click', (ev)=>{ ev.stopPropagation(); const visible = achievementsMenu.style.display === 'block'; achievementsMenu.style.display = visible ? 'none' : 'block'; if (!visible){ renderAchievements(); renderSecrets(); } });
+[storeMenu, statsMenu, achievementsMenu, secretsPanel].forEach(el=>{ el.addEventListener('click', (ev)=>{ ev.stopPropagation(); }); });
+
+document.addEventListener('click', (e)=>{
+  if (storeMenu.style.display === 'block' && !storeMenu.contains(e.target) && e.target !== shopToggle) storeMenu.style.display = 'none';
+  if (statsMenu.style.display === 'block' && !statsMenu.contains(e.target) && e.target !== statsToggle) statsMenu.style.display = 'none';
+  if (achievementsMenu.style.display === 'block' && !achievementsMenu.contains(e.target) && e.target !== achToggle){
+    achievementsMenu.style.display = 'none';
+    secretsPanel.classList.remove('open');
+    secretsPanel.setAttribute('aria-hidden','true');
+  }
+});
+closeAchievements.addEventListener('click', ()=>{ achievementsMenu.style.display = 'none'; secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); });
+viewSecretsBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); secretsPanel.classList.add('open'); secretsPanel.setAttribute('aria-hidden','false'); renderSecrets(); });
+closeSecrets.addEventListener('click', (ev)=>{ ev.stopPropagation(); secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); });
+
+pauseButton.addEventListener("click", () => { isPaused = !isPaused; pauseButton.textContent = isPaused ? "Resume" : "Pause"; });
+settingsBtn.addEventListener("click", (e) => { e.stopPropagation(); settingsMenu.style.display = settingsMenu.style.display === "block" ? "none" : "block"; });
+
+/* ---------- start/restart/etc ---------- */
+document.addEventListener("DOMContentLoaded", () => { loadGame(); renderAchievements(); renderSecrets(); updateStatsUI(); });
+
+function realStartGame(){
+  startScreen.style.transition = 'opacity 1200ms ease';
+  startScreen.style.opacity = '0';
+  setTimeout(()=>{ startScreen.style.display = 'none'; }, 1200);
+  setTimeout(()=>{
+    gameArea.style.display = 'block';
+    requestAnimationFrame(()=>{ gameArea.style.opacity = '1'; });
+    startTimer();
+    animateLoop();
+    setTimeout(()=>createAsteroid(), 120);
+    setTimeout(()=>createAsteroid(), 520);
+    if (!randomEventTimerId) randomEventTimerId = setInterval(()=>{ if (gameArea.style.display !== 'none') triggerRandomEvent(); }, randomEventIntervalMs);
+  }, 900);
+}
+
+/* ---------- events: solar flare & black hole ---------- */
+function startSolarFlare(durationMs=30000){
+  if (solarFlareTimer) clearTimeout(solarFlareTimer);
+  solarFlareActive = true;
+  solarFlareExpiresAt = Date.now() + durationMs;
+  solarOverlay.style.transition = 'opacity 300ms ease';
+  solarOverlay.style.opacity = '0.75';
+  showEventPopup("SOLAR FLARE", "#ff8c00");
+  solarFlareTimer = setTimeout(()=>{ endSolarFlare(); }, durationMs);
+}
+function endSolarFlare(){
+  solarFlareActive = false;
+  solarOverlay.style.opacity = '0';
+  if (solarFlareTimer) { clearTimeout(solarFlareTimer); solarFlareTimer = null; }
+}
+function startBlackHole(durationMs=30000){
+  if (blackHoleTimer) clearTimeout(blackHoleTimer);
+  blackHoleActive = true;
+  blackHoleExpiresAt = Date.now() + durationMs;
+  blackholeOverlay.style.transition = 'opacity 300ms ease';
+  blackholeOverlay.style.opacity = '0.75';
+  showEventPopup("BLACK HOLE", "#c18cff");
+  blackHoleTimer = setTimeout(()=>{ endBlackHole(); }, durationMs);
+}
+function endBlackHole(){
+  blackHoleActive = false;
+  blackholeOverlay.style.opacity = '0';
+  if (blackHoleTimer) { clearTimeout(blackHoleTimer); blackHoleTimer = null; }
+}
+
+/* ---------- Random event orchestration ---------- */
+function triggerRandomEvent(){
+  const r = Math.random();
+  if (r < 0.12){ startSolarFlare(30000); }
+  else if (r < 0.22){ startBlackHole(30000); }
+  else {
+    for (let i=0;i<6;i++){ setTimeout(()=>createAsteroid(), i*120); }
+    if (Math.random() < 0.25){ const rect = gameArea.getBoundingClientRect(); const pos = randomEdgePosition(rect); createAlien(pos); }
+    totalEvents++;
+    renderAchievements();
+  }
+}
+
+/* debug buttons */
+debugEventBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); triggerRandomEvent(); });
+debugAlienBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); const rect = gameArea.getBoundingClientRect(); const pos = randomEdgePosition(rect); createAlien(pos); });
+debugSolarBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); startSolarFlare(30000); });
+debugBlackholeBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); startBlackHole(30000); });
+
+/* ---------- store UI sync ---------- */
+function syncStoreUI(){
+  if (scannerBuyBtn){
+    if ((upgrades.scanner || 0) >= 9){
+      scannerBuyBtn.disabled = true;
+      scannerBuyBtn.textContent = 'MAX';
+      scannerBuyBtn.style.background = '#555';
+    } else {
+      scannerBuyBtn.disabled = false;
+      scannerBuyBtn.textContent = 'Buy';
+      scannerBuyBtn.style.background = '';
+    }
+  }
+  document.querySelectorAll('.store-tile').forEach(tile=>{
+    const type = tile.dataset.type;
+    const lvl = tile.querySelector('.store-level');
+    if (!lvl) return;
+    if (type === 'weapon') lvl.textContent = String(upgrades.weapon || 0);
+    else if (type === 'scanner') lvl.textContent = String(upgrades.scanner || 0);
+    else if (type === 'value') lvl.textContent = String(upgrades.value || 0);
+    else if (type === 'spawn') lvl.textContent = String(upgrades.spawn || 0);
+    else if (type === 'allyCount') lvl.textContent = String(upgrades.allyCount || 0);
+    else if (type === 'allyRate') lvl.textContent = String(upgrades.allyRate || 0);
+    const costTag = tile.querySelector('.store-cost');
+    if (costTag){
+      const btn = tile.querySelector('.buyButton');
+      if (btn && btn.dataset && btn.dataset.cost) costTag.textContent = `$${fmt(Number(btn.dataset.cost)||0)}`;
+    }
+  });
+}
+syncStoreUI();
+setInterval(syncStoreUI, 1000);
+
+/* periodic achievement/secret checks */
+setInterval(()=>{ achievements.forEach(a=>{ if (!a.unlocked && typeof a.condition === 'function' && a.condition()) a.unlocked = true; }); renderAchievements(); renderSecrets(); updateStatsUI(); }, 2000);
+
+/* ---------- INTRO typing (3 lines, 2 long pauses), centered but typed left-to-right ---------- */
+const lines = [
+  "Space is full of useless rock.",
+  "Rich people pay good money for useless stuff.",
+  "Time to make some cash."
+];
+let lineIndex = 0;
+let charIndex = 0;
+let typingTimer = null;
+
+function typeNextChar(){
+  if (lineIndex >= lines.length){
+    setTimeout(()=>{ realStartGame(); }, 900);
+    startScreen.style.transition = 'opacity 1200ms ease';
+    startScreen.style.opacity = '0';
+    return;
+  }
+  const line = lines[lineIndex];
+  if (charIndex <= line.length){
+    introTextEl.textContent = line.slice(0, charIndex);
+    charIndex++;
+    typingTimer = setTimeout(typeNextChar, 36);
+  } else {
+    const pause = 1200;
+    setTimeout(()=>{
+      charIndex = 0;
+      lineIndex++;
+      introTextEl.textContent = '';
+      setTimeout(typeNextChar, 180);
+    }, pause);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(typeNextChar, 600); if (!randomEventTimerId) randomEventTimerId = setInterval(()=>{ if (gameArea.style.display !== 'none') triggerRandomEvent(); }, randomEventIntervalMs); });
+
+</script>
 </body>
 </html>
