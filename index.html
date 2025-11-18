@@ -686,6 +686,18 @@ const saveButton = document.getElementById("saveButton");
   });
 
   saveButton.addEventListener("click", () => {
+
+  // --- collect current upgrade button costs + purchases (uses your existing buyButton class) ---
+  const upgradeButtonCosts = {};
+  document.querySelectorAll('.buyButton').forEach(btn => {
+    const type = btn.dataset.type;
+    upgradeButtonCosts[type] = {
+      cost: btn.dataset.cost,
+      purchases: btn.dataset.purchases || "0"
+    };
+  });
+  // --------------------------------------------------------------------
+
   const saveData = {
     money,
     weaponLevel,
@@ -697,11 +709,21 @@ const saveButton = document.getElementById("saveButton");
     upgradesPurchased,
     totalEvents,
     allyCount,
-    
-   
-    
-    
-    // you could add more here
+    upgradeButtonCosts,  
+
+     achievementsState: achievements.map(a => ({
+    id: a.id,
+    unlocked: a.unlocked,
+    claimed: a.claimed,
+    hiddenTitle: a.hiddenTitle
+  })),
+
+  // ⭐ NEW: Save secrets too
+  secretsState: secrets.map(s => ({
+    id: s.id,
+    revealed: s.revealed,
+    collected: s.collected
+  }))
   };
 
   localStorage.setItem("myGameSave", JSON.stringify(saveData));
@@ -712,21 +734,74 @@ const saveButton = document.getElementById("saveButton");
   const saved = localStorage.getItem("myGameSave");
   if (saved) {
     const data = JSON.parse(saved);
+
     money = data.money || 0;
     weaponLevel = data.weaponLevel || 0;
-    upgrades = data.upgrades || {};
+    upgrades = data.upgrades || { weapon:0, scanner:0, value:0 };
     asteroidsDestroyed = data.asteroidsDestroyed || 0;
     secondsPlayed = data.secondsPlayed || 0;
     totalMoneyEarned = data.totalMoneyEarned || 0;
     moneySpent = data.moneySpent || 0;
     upgradesPurchased = data.upgradesPurchased || 0;
     totalEvents = data.totalEvents || 0;
-    allyCount = data.ally || 0;
-    
-    updateButtonLabel(weapon);
-    updateButtonLabel(scanner);
-    updateButtonLabel(value);
+    allyCount = data.allyCount || 0; 
 
+    // --- restore saved button costs & purchases (if present) ---
+    if (data.upgradeButtonCosts) {
+      document.querySelectorAll('.buyButton').forEach(btn => {
+        const type = btn.dataset.type;
+        const savedObj = data.upgradeButtonCosts[type];
+        if (savedObj) {
+          if (savedObj.cost !== undefined) btn.dataset.cost = String(savedObj.cost);
+          if (savedObj.purchases !== undefined) btn.dataset.purchases = String(savedObj.purchases);
+        }
+      });
+    }
+
+    // --- Immediately update each button label using the same rules as your original updateButtonLabel ---
+    document.querySelectorAll('.buyButton').forEach(btn => {
+      const type = btn.dataset.type;
+      const cost = Number(btn.dataset.cost || 0);
+      const purchases = Number(btn.dataset.purchases || 0);
+
+      if (type === 'weapon'){
+        btn.textContent = `Laser Lv${(upgrades.weapon || 0) + 1} - $${fmt(cost)}`;
+      } else if (type === 'scanner'){
+        btn.textContent = `Radar Next Lv${(upgrades.scanner || 0) + 1} - $${fmt(cost)}`;
+      } else if (type === 'value'){
+        btn.textContent = `Value Lv${purchases + 1} - $${fmt(cost)}`;
+      } else {
+        // fallback to original text if present
+        btn.textContent = (btn.dataset.origText ? btn.dataset.origText + ` - $${fmt(cost)}` : `Buy - $${fmt(cost)}`);
+      }
+    });
+
+    if (data.achievementsState) {
+  data.achievementsState.forEach(savedA => {
+    const a = achievements.find(x => x.id === savedA.id);
+    if (a) {
+      a.unlocked = !!savedA.unlocked;
+      a.claimed = !!savedA.claimed;
+      a.hiddenTitle = !!savedA.hiddenTitle;
+    }
+  });
+}
+
+// ---------- RESTORE SECRETS ----------
+if (data.secretsState) {
+  data.secretsState.forEach(savedS => {
+    const s = secrets.find(x => x.id === savedS.id);
+    if (s) {
+      s.revealed = !!savedS.revealed;
+      s.collected = !!savedS.collected;
+    }
+  });
+}
+
+    // update the rest of the UI / stats
+    updateStatsUI();
+    renderAchievements();
+    renderSecrets();
   }
 }
 
@@ -746,6 +821,26 @@ confirmNo.addEventListener("click", () => {
   secrets.forEach(s => { s.revealed = false; s.collected = false; });
   activeCircles.forEach(c => c.el.remove());
   activeCircles = [];
+
+  document.querySelectorAll('.buyButton').forEach(btn => {
+    const type = btn.dataset.type;
+
+    if (type === "weapon") {
+      btn.dataset.cost = "10";
+      btn.dataset.purchases = "0";
+      btn.textContent = `Laser Lv1 - $10`;
+    } 
+    else if (type === "scanner") {
+      btn.dataset.cost = "15";
+      btn.dataset.purchases = "0";
+      btn.textContent = `Radar Lv1 - $15`;
+    } 
+    else if (type === "value") {
+      btn.dataset.cost = "25";
+      btn.dataset.purchases = "0";
+      btn.textContent = `Value Lv1 - $25`;
+    }
+  });
 
   isPaused = false;
   pauseButton.textContent = " Pause";
