@@ -687,7 +687,6 @@ const saveButton = document.getElementById("saveButton");
 
   saveButton.addEventListener("click", () => {
 
-  // --- collect current upgrade button costs + purchases (uses your existing buyButton class) ---
   const upgradeButtonCosts = {};
   document.querySelectorAll('.buyButton').forEach(btn => {
     const type = btn.dataset.type;
@@ -696,7 +695,6 @@ const saveButton = document.getElementById("saveButton");
       purchases: btn.dataset.purchases || "0"
     };
   });
-  // --------------------------------------------------------------------
 
   const saveData = {
     money,
@@ -718,7 +716,6 @@ const saveButton = document.getElementById("saveButton");
     hiddenTitle: a.hiddenTitle
   })),
 
-  // ⭐ NEW: Save secrets too
   secretsState: secrets.map(s => ({
     id: s.id,
     revealed: s.revealed,
@@ -746,7 +743,7 @@ const saveButton = document.getElementById("saveButton");
     totalEvents = data.totalEvents || 0;
     allyCount = data.allyCount || 0; 
 
-    // --- restore saved button costs & purchases (if present) ---
+    
     if (data.upgradeButtonCosts) {
       document.querySelectorAll('.buyButton').forEach(btn => {
         const type = btn.dataset.type;
@@ -758,7 +755,7 @@ const saveButton = document.getElementById("saveButton");
       });
     }
 
-    // --- Immediately update each button label using the same rules as your original updateButtonLabel ---
+    
     document.querySelectorAll('.buyButton').forEach(btn => {
       const type = btn.dataset.type;
       const cost = Number(btn.dataset.cost || 0);
@@ -771,7 +768,6 @@ const saveButton = document.getElementById("saveButton");
       } else if (type === 'value'){
         btn.textContent = `Value Lv${purchases + 1} - $${fmt(cost)}`;
       } else {
-        // fallback to original text if present
         btn.textContent = (btn.dataset.origText ? btn.dataset.origText + ` - $${fmt(cost)}` : `Buy - $${fmt(cost)}`);
       }
     });
@@ -787,7 +783,6 @@ const saveButton = document.getElementById("saveButton");
   });
 }
 
-// ---------- RESTORE SECRETS ----------
 if (data.secretsState) {
   data.secretsState.forEach(savedS => {
     const s = secrets.find(x => x.id === savedS.id);
@@ -798,7 +793,6 @@ if (data.secretsState) {
   });
 }
 
-    // update the rest of the UI / stats
     updateStatsUI();
     renderAchievements();
     renderSecrets();
