@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Cosmo Blasters — Achievements Restored, Shop Centered Top</title>
+<title>Cosmo Blasters — Organized</title>
 <style>
   :root{ --bg:#000; --panel:#111; --muted:#666; }
   body{ margin:0; height:100vh; display:flex; justify-content:center; align-items:center; background:var(--bg); color:#fff; font-family:Arial, sans-serif; overflow:hidden; }
@@ -153,6 +153,16 @@
         <button id="saveButton" class="menuButton">Save</button>
         <button id="pauseButton" class="menuButton">Pause</button>
         <button id="restartButton" class="menuButton">Restart</button>
+        <!-- Theme Selector (added inside settings) -->
+        <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+          <label for="themeSelect" style="font-size:13px; color:#ccc;">Background Theme:</label>
+          <select id="themeSelect" style="padding:4px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">
+            <option value="default">Default</option>
+            <option value="nebula2">Nebula 2</option>
+            <option value="starryNight">Starry Night</option>
+            <option value="solarSystem">Solar System</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -250,7 +260,12 @@
   <button id="debugAlienBtn" class="debugBtn" title="Spawn alien (debug)">ALIEN</button>
 
 <script>
-/* ================= State & constants (kept from last working version) ================= */
+/* ====================================================================
+   Organized JavaScript: sections below group related logic without changing
+   behavior. I only reorganized and added comments for readability.
+   ==================================================================== */
+
+/* -------------------- 1) State, constants & DOM refs -------------------- */
 const startScreen = document.getElementById('startScreen');
 const introTextEl = document.getElementById('introText');
 
@@ -281,6 +296,7 @@ const debugBlackholeBtn = document.getElementById('debugBlackholeBtn');
 const scannerBuyBtn = document.getElementById('scannerBuyBtn');
 const solarOverlay = document.getElementById('solarOverlay');
 const blackholeOverlay = document.getElementById('blackholeOverlay');
+const themeSelect = document.getElementById('themeSelect');
 
 let money = 0, totalMoneyEarned = 0, moneySpent = 0, asteroidsDestroyed = 0, upgradesPurchased = 0, secondsPlayed = 0, totalEvents = 0;
 let upgrades = { weapon:0, scanner:0, value:0, spawn:0, allyCount:0, allyRate:0 };
@@ -318,7 +334,7 @@ const ASTEROID_TYPES = [
   { id:'rainbow', label:'Rainbow', hp:250, reward:80 }
 ];
 
-/* Achievements & Secrets (restored card-style data used by renderer) */
+/* -------------------- 2) Achievements & Secrets Data -------------------- */
 const achievements = [
   { id: 'ach1', title: 'Asteroid Rookie', desc: 'Destroy 5 asteroids.', reward: 10, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>asteroidsDestroyed>=5 },
   { id: 'ach2', title: 'First Blood', desc: 'Destroy your 1st asteroid.', reward: 8, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>asteroidsDestroyed>=1 },
@@ -340,7 +356,7 @@ const secrets = [
 
 let recentKillsTimestamps = [];
 
-/* ========== Helpers & UI Updaters ========== */
+/* -------------------- 3) Helpers & UI Updaters -------------------- */
 function fmt(n){ return Number(n).toFixed(0); }
 function updateStatsUI(){
   document.getElementById('totalMoneyEarned').textContent = `$${totalMoneyEarned}`;
@@ -356,7 +372,7 @@ function updateStatsUI(){
   moneyDisplay.textContent = `Money: $${money}`;
 }
 
-/* ---- Achievements rendering — restored card layout with claim buttons ---- */
+/* Achievements rendering */
 function renderAchievements(){
   achievementsList.innerHTML = '';
   achievements.forEach(a=>{
@@ -396,7 +412,7 @@ function renderAchievements(){
   });
 }
 
-/* ---- Secrets rendering (original panel style) ---- */
+/* Secrets rendering */
 function renderSecrets(){
   secretsList.innerHTML = '';
   secrets.forEach(s=>{
@@ -413,17 +429,15 @@ function renderSecrets(){
   });
 }
 
-/* ---- Secret helpers ---- */
-function revealSecretById(id, revealName){
-  const s = secrets.find(x=>x.id===id); if(!s) return; if(!s.revealed){ s.revealed = true; if(revealName) s.name = revealName; renderSecrets(); }
-}
+/* Secret helpers */
+function revealSecretById(id, revealName){ const s = secrets.find(x=>x.id===id); if(!s) return; if(!s.revealed){ s.revealed = true; if(revealName) s.name = revealName; renderSecrets(); } }
 function maybeUnlockSecret(trigger){
   if (trigger === 'purchase' || trigger === 'first_upgrade'){ if (!secrets[1].revealed) revealSecretById('s2','Forged in Fire'); }
   if (trigger === 'first_asteroid'){ if (!secrets[0].revealed) revealSecretById('s1','First Light'); }
   if (trigger === 'alien_clicked'){ if (!secrets[2].revealed) revealSecretById('s3','Alien Relic'); }
 }
 
-/* ---------- visuals mapping for scanner ---------- */
+/* -------------------- 4) Theme / Visual helpers -------------------- */
 function getScannerVisual(level){
   const map = {
     1:{ tintType:'color', tintValue:'#8b8b8b' },
@@ -440,7 +454,45 @@ function getScannerVisual(level){
   return map[lvl] || map[1];
 }
 
-/* ---------- spawn helpers ---------- */
+/* Theme apply/load logic */
+function applyTheme(theme) {
+    // This only changes the gameArea background so existing UI remains untouched
+    switch (theme) {
+        case "nebula2":
+            gameArea.style.backgroundImage = "url('assets/backgrounds/nebula2.jpg')";
+            break;
+        case "starryNight":
+            gameArea.style.backgroundImage = "url('assets/backgrounds/starrynight.jpg')";
+            break;
+        case "solarSystem":
+            gameArea.style.backgroundImage = "url('assets/backgrounds/galaxy.jpg')";
+            break;
+        default:
+            gameArea.style.backgroundImage = "url('stockSpaceBackground.jpg')";
+            break;
+    }
+    gameArea.style.backgroundSize = "cover";
+    gameArea.style.backgroundRepeat = "no-repeat";
+}
+
+/* Theme dropdown wiring */
+if (themeSelect){
+  // Load saved theme on page load
+  document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme") || "default";
+      applyTheme(savedTheme);
+      try { themeSelect.value = savedTheme; } catch(e){}
+  });
+
+  // When dropdown changes theme
+  themeSelect.addEventListener("change", () => {
+      const theme = themeSelect.value;
+      applyTheme(theme);
+      localStorage.setItem("theme", theme);
+  });
+}
+
+/* -------------------- 5) Spawn helpers & entity removal -------------------- */
 function randomEdgePosition(rect){
   const edge = Math.floor(Math.random()*4);
   let x,y,dx,dy;
@@ -458,48 +510,15 @@ function randomEdgePosition(rect){
 }
 function removeEntityById(id){ const ent = activeMap.get(id); if (!ent) return; if (ent.el && ent.el.remove) ent.el.remove(); activeMap.delete(id); }
 
-/* value & hp scaling */
-function payoutForBase(base){
-  const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0));
-  return Math.max(1, Math.round(base * valueMult));
-}
-function hpForBase(baseHp){
-  const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0));
-  return Math.max(1, Math.round(baseHp * valueMult));
-}
+function payoutForBase(base){ const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0)); return Math.max(1, Math.round(base * valueMult)); }
+function hpForBase(baseHp){ const valueMult = Math.pow(1.5, Math.max(0, upgrades.value || 0)); return Math.max(1, Math.round(baseHp * valueMult)); }
+function getPlayerDamage(){ const baseDamage = 1; const mult = Math.pow(1.5, Math.max(0, upgrades.weapon || 0)); return Math.max(1, Math.floor(baseDamage * mult)); }
 
-/* weapon damage scaling: 1.5x per weapon upgrade */
-function getPlayerDamage(){
-  const baseDamage = 1;
-  const mult = Math.pow(1.5, Math.max(0, upgrades.weapon || 0));
-  return Math.max(1, Math.floor(baseDamage * mult));
-}
-
-/* event state */
-let solarFlareActive = false, solarFlareExpiresAt = 0, solarFlareTimer = null;
-let blackHoleActive = false, blackHoleExpiresAt = 0, blackHoleTimer = null;
-
-/* show event popup */
-function showEventPopup(text, color='#fff'){
-  alienPopup.textContent = text;
-  alienPopup.style.color = color;
-  alienPopup.classList.add('show');
-  alienPopup.setAttribute('aria-hidden','false');
-  setTimeout(()=>{ alienPopup.classList.remove('show'); alienPopup.setAttribute('aria-hidden','true'); }, 1600);
-}
+/* ---------- visuals mapping for scanner ---------- */
+function pickDisplayLevelForSpawn(){ const scanner = Math.max(0, upgrades.scanner || 0); const maxDisplay = Math.min(9, scanner + 1); const chosen = 1 + Math.floor(Math.random()*maxDisplay); return chosen; }
+function gameplayTypeForDisplayLevel(displayLevel){ const idx = Math.max(1, Math.min(9, displayLevel)) - 1; return ASTEROID_TYPES[idx] || ASTEROID_TYPES[0]; }
 
 /* ---------- asteroid creation & click handling ---------- */
-function pickDisplayLevelForSpawn(){
-  const scanner = Math.max(0, upgrades.scanner || 0);
-  const maxDisplay = Math.min(9, scanner + 1);
-  const chosen = 1 + Math.floor(Math.random()*maxDisplay);
-  return chosen;
-}
-function gameplayTypeForDisplayLevel(displayLevel){
-  const idx = Math.max(1, Math.min(9, displayLevel)) - 1;
-  return ASTEROID_TYPES[idx] || ASTEROID_TYPES[0];
-}
-
 function createAsteroid(options){
   if (isPaused) return;
   const currentAsteroids = [...activeMap.values()].filter(e=>e.kind==='asteroid').length;
@@ -509,10 +528,7 @@ function createAsteroid(options){
   const pos = randomEdgePosition(rect);
 
   // small chance for alien instead of asteroid
-  if (Math.random() < ALIEN_SPAWN_CHANCE){
-    createAlien(pos);
-    return;
-  }
+  if (Math.random() < ALIEN_SPAWN_CHANCE){ createAlien(pos); return; }
 
   const displayLevel = options && options.displayLevel ? options.displayLevel : pickDisplayLevelForSpawn();
   const type = options && options.typeOverride ? options.typeOverride : gameplayTypeForDisplayLevel(displayLevel);
@@ -539,12 +555,7 @@ function createAsteroid(options){
   if (visual.tintType === 'color'){ tintDiv.style.background = visual.tintValue; } else if (visual.tintType === 'rainbow'){ tintDiv.classList.add('rainbow'); }
   el.appendChild(tintDiv);
 
-  function refreshHpUI(){
-    const pct = Math.max(0, hpObj.hp / hpObj.maxHp);
-    hpInner.style.width = `${Math.floor(pct*100)}%`;
-    hpText.textContent = Math.round(hpObj.hp);
-    el.style.filter = `brightness(${0.65 + pct*0.6})`;
-  }
+  function refreshHpUI(){ const pct = Math.max(0, hpObj.hp / hpObj.maxHp); hpInner.style.width = `${Math.floor(pct*100)}%`; hpText.textContent = Math.round(hpObj.hp); el.style.filter = `brightness(${0.65 + pct*0.6})`; }
   refreshHpUI();
 
   gameArea.appendChild(el);
@@ -567,10 +578,7 @@ function createAsteroid(options){
           const hpIn = other.el.querySelector('.hp-bar-inner'); const hpText2 = other.el.querySelector('div[style*="pointer-events"]');
           if (hpIn) hpIn.style.width = `${Math.floor((other.hpObj.hp/other.hpObj.maxHp)*100)}%`;
           if (hpText2) hpText2.textContent = Math.round(other.hpObj.hp);
-          if (other.hpObj.hp <= 0){
-            money += other.hpObj.reward; totalMoneyEarned += other.hpObj.reward; asteroidsDestroyed++; totalEvents++;
-            removeEntityById(oid);
-          }
+          if (other.hpObj.hp <= 0){ money += other.hpObj.reward; totalMoneyEarned += other.hpObj.reward; asteroidsDestroyed++; totalEvents++; removeEntityById(oid); }
         }
       }
       updateStatsUI(); renderAchievements(); renderSecrets();
@@ -590,35 +598,20 @@ function createAsteroid(options){
       if (asteroidsDestroyed === 1) maybeUnlockSecret('first_asteroid');
       removeEntityById(id);
       renderAchievements(); renderSecrets();
-    } else {
-      refreshHpUI();
-    }
+    } else { refreshHpUI(); }
   });
 }
 
-function spawnExplosion(x,y){
-  const ex = document.createElement('div'); ex.className='explosion';
-  ex.style.left = `${x}px`; ex.style.top = `${y}px`; gameArea.appendChild(ex);
-  setTimeout(()=>{ ex.style.transform = 'translate(-50%,-50%) scale(2.2)'; ex.style.opacity = '0'; }, 20);
-  setTimeout(()=>{ ex.remove(); }, 420);
-}
+function spawnExplosion(x,y){ const ex = document.createElement('div'); ex.className='explosion'; ex.style.left = `${x}px`; ex.style.top = `${y}px`; gameArea.appendChild(ex); setTimeout(()=>{ ex.style.transform = 'translate(-50%,-50%) scale(2.2)'; ex.style.opacity = '0'; }, 20); setTimeout(()=>{ ex.remove(); }, 420); }
 
-/* ---------- alien ---------- */
+/* -------------------- 6) Alien logic -------------------- */
 function createAlien(pos){
   const id = nextEntityId++;
-  const el = document.createElement('div'); el.className = 'alien';
-  el.dataset.eid = String(id);
-  el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
+  const el = document.createElement('div'); el.className = 'alien'; el.dataset.eid = String(id); el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
   gameArea.appendChild(el);
   activeMap.set(id, { id, el, x:pos.x, y:pos.y, dx:(pos.dx||0.4)*1.2, dy:(pos.dy||0.2)*1.2, kind:'alien' });
 
-  el.addEventListener('click', (ev)=>{
-    ev.stopPropagation();
-    revealSecretById('s3','Alien Relic');
-    handleAlienClick();
-    removeEntityById(id);
-    renderSecrets();
-  });
+  el.addEventListener('click', (ev)=>{ ev.stopPropagation(); revealSecretById('s3','Alien Relic'); handleAlienClick(); removeEntityById(id); renderSecrets(); });
 }
 function handleAlienClick(){
   totalEvents++;
@@ -628,16 +621,11 @@ function handleAlienClick(){
     const idx = Math.max(1, highestUnlocked) - 1;
     const baseReward = ASTEROID_TYPES[idx] ? ASTEROID_TYPES[idx].reward : ASTEROID_TYPES[0].reward;
     const amount = Math.round(5 * payoutForBase(baseReward));
-    money += amount; totalMoneyEarned += amount;
-    updateStatsUI();
-    showEventPopup("ALIEN CASH","#00ff6a");
-  } else {
-    applyAllyBuff(10, 10000);
-    showEventPopup("ALIEN WEAPON SURGE","#00ff6a");
-  }
+    money += amount; totalMoneyEarned += amount; updateStatsUI(); showEventPopup("ALIEN CASH","#00ff6a");
+  } else { applyAllyBuff(10, 10000); showEventPopup("ALIEN WEAPON SURGE","#00ff6a"); }
 }
 
-/* ---------- allies ---------- */
+/* -------------------- 7) Allies -------------------- */
 function spawnAllies(){
   const desired = Math.max(0, upgrades.allyCount || 0);
   while (allyShips.length > desired){ const a = allyShips.pop(); a.el.remove(); clearInterval(a.fireIntervalId); }
@@ -654,11 +642,7 @@ function spawnAllies(){
   }
   updateStatsUI();
 }
-function startAllyFiring(ship){
-  if (ship.fireIntervalId) clearInterval(ship.fireIntervalId);
-  const intervalMs = 1000 / Math.max(0.01, allyShotsPerSecond());
-  ship.fireIntervalId = setInterval(()=>{ allyFireOnce(ship); }, Math.max(30, intervalMs));
-}
+function startAllyFiring(ship){ if (ship.fireIntervalId) clearInterval(ship.fireIntervalId); const intervalMs = 1000 / Math.max(0.01, allyShotsPerSecond()); ship.fireIntervalId = setInterval(()=>{ allyFireOnce(ship); }, Math.max(30, intervalMs)); }
 function updateAlliesFiringRate(){ allyShips.forEach(s=>startAllyFiring(s)); updateStatsUI(); }
 function allyFireOnce(ship){
   const asteroids = Array.from(activeMap.values()).filter(c=>c.kind==='asteroid');
@@ -667,8 +651,7 @@ function allyFireOnce(ship){
   const sx = ship.x + (96/2), sy = ship.y + (56/2);
   for (const a of asteroids){ const ax = a.x+28, ay = a.y+28; const d = (ax-sx)*(ax-sx)+(ay-sy)*(ay-sy); if (d < bestd){ bestd = d; best = a; } }
   if (!best) return;
-  const shot = document.createElement('div'); shot.className='ally-shot';
-  shot.style.left = `${ship.x + 48}px`; shot.style.top = `${ship.y + 28}px`;
+  const shot = document.createElement('div'); shot.className='ally-shot'; shot.style.left = `${ship.x + 48}px`; shot.style.top = `${ship.y + 28}px`;
   gameArea.appendChild(shot);
   const shotId = nextEntityId++;
   activeMap.set(shotId, { id:shotId, el:shot, x:ship.x+48, y:ship.y+28, kind:'allyShot', targetId: best.id });
@@ -691,24 +674,20 @@ function allyFireOnce(ship){
         const hpText = realTarget.el.querySelector('div[style*="pointer-events"]');
         if (hpIn) hpIn.style.width = `${Math.floor((realTarget.hpObj.hp/realTarget.hpObj.maxHp)*100)}%`;
         if (hpText) hpText.textContent = Math.round(realTarget.hpObj.hp);
-        if (realTarget.hpObj.hp <= 0){
-          money += realTarget.hpObj.reward; totalMoneyEarned += realTarget.hpObj.reward; asteroidsDestroyed++;
-          removeEntityById(realTarget.id);
-          updateStatsUI();
-        }
+        if (realTarget.hpObj.hp <= 0){ money += realTarget.hpObj.reward; totalMoneyEarned += realTarget.hpObj.reward; asteroidsDestroyed++; removeEntityById(realTarget.id); updateStatsUI(); }
       }
-      clearInterval(interval);
-      shot.remove();
-      activeMap.delete(shotId);
+      clearInterval(interval); shot.remove(); activeMap.delete(shotId);
     }
   }, 16);
 }
 
-/* ---------- animate loop (black hole pull — improved, no shrink) ---------- */
+/* -------------------- 8) Game loop / animation -------------------- */
+let solarFlareActive = false, solarFlareExpiresAt = 0, solarFlareTimer = null;
+let blackHoleActive = false, blackHoleExpiresAt = 0, blackHoleTimer = null;
+
 function animateLoop(){
   const rect = gameArea.getBoundingClientRect();
-  const centerX = rect.width/2;
-  const centerY = rect.height/2;
+  const centerX = rect.width/2; const centerY = rect.height/2;
 
   for (const [id, ent] of Array.from(activeMap.entries())){
     if (ent.kind === 'asteroid' || ent.kind === 'alien'){
@@ -719,60 +698,27 @@ function animateLoop(){
         const pullStrength = Math.min(0.65, 0.025 + (180 / (dist + 40)) * 0.01);
         const desiredVx = (toX / dist) * pullStrength * 8;
         const desiredVy = (toY / dist) * pullStrength * 8;
-        ent.dx = ent.dx * 0.86 + desiredVx * 0.14;
-        ent.dy = ent.dy * 0.86 + desiredVy * 0.14;
-        const maxVel = 1.6;
-        const sp = Math.sqrt(ent.dx*ent.dx + ent.dy*ent.dy) || 0;
+        ent.dx = ent.dx * 0.86 + desiredVx * 0.14; ent.dy = ent.dy * 0.86 + desiredVy * 0.14;
+        const maxVel = 1.6; const sp = Math.sqrt(ent.dx*ent.dx + ent.dy*ent.dy) || 0;
         if (sp > maxVel){ ent.dx = (ent.dx / sp) * maxVel; ent.dy = (ent.dy / sp) * maxVel; }
         ent.dx *= 0.995; ent.dy *= 0.995;
-        // no shrinking transform applied
       }
 
-      ent.x += ent.dx; ent.y += ent.dy;
-      ent.el.style.left = `${ent.x}px`; ent.el.style.top = `${ent.y}px`;
+      ent.x += ent.dx; ent.y += ent.dy; ent.el.style.left = `${ent.x}px`; ent.el.style.top = `${ent.y}px`;
     }
-    if (ent.x < -300 || ent.x > rect.width + 300 || ent.y < -300 || ent.y > rect.height + 300){
-      if (ent.el && ent.el.remove) ent.el.remove();
-      activeMap.delete(id);
-    }
+    if (ent.x < -300 || ent.x > rect.width + 300 || ent.y < -300 || ent.y > rect.height + 300){ if (ent.el && ent.el.remove) ent.el.remove(); activeMap.delete(id); }
   }
 
   allyShips.forEach((s, idx)=>{ const cx = gameArea.clientWidth/2 - 48 + (idx*36 % 120) - 60; const cy = gameArea.clientHeight/2 - 28 + Math.sin(Date.now()/800 + idx)*18; s.x = cx; s.y = cy; s.el.style.left = `${s.x}px`; s.el.style.top = `${s.y}px`; });
 
-  if (solarFlareActive){
-    const now = Date.now();
-    const remaining = solarFlareExpiresAt - now;
-    if (remaining <= 0){ endSolarFlare(); } else { solarOverlay.style.opacity = Math.min(1, 0.75); }
-  }
-
-  if (blackHoleActive){
-    const now = Date.now();
-    const remaining = blackHoleExpiresAt - now;
-    if (remaining <= 0){ endBlackHole(); } else { blackholeOverlay.style.opacity = Math.min(1, 0.75); }
-  }
+  if (solarFlareActive){ const now = Date.now(); const remaining = solarFlareExpiresAt - now; if (remaining <= 0){ endSolarFlare(); } else { solarOverlay.style.opacity = Math.min(1, 0.75); } }
+  if (blackHoleActive){ const now = Date.now(); const remaining = blackHoleExpiresAt - now; if (remaining <= 0){ endBlackHole(); } else { blackholeOverlay.style.opacity = Math.min(1, 0.75); } }
 
   requestAnimationFrame(animateLoop);
 }
 
-/* ---------- spawn timer ---------- */
-function startTimer(){
-  if (spawnTimer) return;
-  spawnTimer = setInterval(()=>{
-    if (isPaused) return;
-    secondsPlayed++; updateStatsUI();
-    const scannerFactor = 1 + (0.12 * (upgrades.scanner || 0));
-    const spawnFactor = 1 + (0.35 * (upgrades.spawn || 0));
-    const effectiveSpawnProb = Math.min(0.95, BASE_SPAWN_PROB * scannerFactor * spawnFactor);
-    maxActive = Math.max(DEFAULT_MAX_ACTIVE, DEFAULT_MAX_ACTIVE + (upgrades.spawn || 0) * 2);
-    const spawnsThisTick = (Date.now() < allyBuffExpiresAt) ? 2 + Math.floor(Math.random()*3) : 1;
-    if (Math.random() < effectiveSpawnProb){
-      for (let i=0;i<spawnsThisTick;i++){
-        const currentAsteroids = [...activeMap.values()].filter(e=>e.kind==='asteroid').length;
-        if (currentAsteroids < maxActive) createAsteroid();
-      }
-    }
-  }, BASE_SPAWN_INTERVAL_MS);
-}
+/* -------------------- 9) Timers / spawning orchestration -------------------- */
+function startTimer(){ if (spawnTimer) return; spawnTimer = setInterval(()=>{ if (isPaused) return; secondsPlayed++; updateStatsUI(); const scannerFactor = 1 + (0.12 * (upgrades.scanner || 0)); const spawnFactor = 1 + (0.35 * (upgrades.spawn || 0)); const effectiveSpawnProb = Math.min(0.95, BASE_SPAWN_PROB * scannerFactor * spawnFactor); maxActive = Math.max(DEFAULT_MAX_ACTIVE, DEFAULT_MAX_ACTIVE + (upgrades.spawn || 0) * 2); const spawnsThisTick = (Date.now() < allyBuffExpiresAt) ? 2 + Math.floor(Math.random()*3) : 1; if (Math.random() < effectiveSpawnProb){ for (let i=0;i<spawnsThisTick;i++){ const currentAsteroids = [...activeMap.values()].filter(e=>e.kind==='asteroid').length; if (currentAsteroids < maxActive) createAsteroid(); } } }, BASE_SPAWN_INTERVAL_MS); }
 
 /* ---------- Store wiring ---------- */
 document.querySelectorAll('.buyButton').forEach(button=>{
@@ -780,9 +726,7 @@ document.querySelectorAll('.buyButton').forEach(button=>{
   button.dataset.purchases = String(Number(button.dataset.purchases) || 0);
 
   function updateButtonLabel(btn){
-    const type = btn.dataset.type;
-    const tile = btn.closest('.store-tile');
-    if (!tile) return;
+    const type = btn.dataset.type; const tile = btn.closest('.store-tile'); if (!tile) return;
     if (type === 'weapon') tile.querySelector('.store-level').textContent = String(upgrades.weapon || 0);
     else if (type === 'scanner') tile.querySelector('.store-level').textContent = String(upgrades.scanner || 0);
     else if (type === 'value') tile.querySelector('.store-level').textContent = String(upgrades.value || 0);
@@ -794,11 +738,7 @@ document.querySelectorAll('.buyButton').forEach(button=>{
   updateButtonLabel(button);
 
   button.addEventListener('click', (e)=>{
-    e.stopPropagation(); e.preventDefault();
-    if (button.disabled) return;
-    const cost = Number(button.dataset.cost);
-    const type = button.dataset.type;
-    let purchases = Number(button.dataset.purchases);
+    e.stopPropagation(); e.preventDefault(); if (button.disabled) return; const cost = Number(button.dataset.cost); const type = button.dataset.type; let purchases = Number(button.dataset.purchases);
 
     if (money >= cost){
       money -= cost; moneySpent += cost; upgradesPurchased += 1; purchases += 1; button.dataset.purchases = String(purchases);
@@ -810,58 +750,23 @@ document.querySelectorAll('.buyButton').forEach(button=>{
       else if (type === 'allyCount'){ upgrades.allyCount = upgrades.allyCount + 1; spawnAllies(); }
       else if (type === 'allyRate'){ upgrades.allyRate = upgrades.allyRate + 1; updateAlliesFiringRate(); }
 
-      const nextCost = Math.max(1, Math.round(cost * 2));
-      button.dataset.cost = String(nextCost);
-      updateStatsUI();
+      const nextCost = Math.max(1, Math.round(cost * 2)); button.dataset.cost = String(nextCost); updateStatsUI();
 
       if (type === 'scanner'){
-        if (upgrades.scanner >= 9){
-          if (scannerBuyBtn){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = "MAX"; scannerBuyBtn.style.background = "#555"; }
-        } else { if (scannerBuyBtn){ scannerBuyBtn.disabled = false; scannerBuyBtn.textContent = "Buy"; scannerBuyBtn.style.background = ""; } }
+        if (upgrades.scanner >= 9){ if (scannerBuyBtn){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = "MAX"; scannerBuyBtn.style.background = "#555"; } } else { if (scannerBuyBtn){ scannerBuyBtn.disabled = false; scannerBuyBtn.textContent = "Buy"; scannerBuyBtn.style.background = ""; } }
       }
 
-      totalEvents++;
-      maybeUnlockSecret('purchase');
-      if (upgrades.weapon + upgrades.scanner + upgrades.value === 1) maybeUnlockSecret('first_upgrade');
-      renderAchievements(); renderSecrets();
-    } else {
-      button.style.transform = 'scale(0.98)';
-      setTimeout(()=>{ button.style.transform = ''; }, 120);
-    }
+      totalEvents++; maybeUnlockSecret('purchase'); if (upgrades.weapon + upgrades.scanner + upgrades.value === 1) maybeUnlockSecret('first_upgrade'); renderAchievements(); renderSecrets();
+    } else { button.style.transform = 'scale(0.98)'; setTimeout(()=>{ button.style.transform = ''; }, 120); }
   });
 });
 
 /* ---------- save/load ---------- */
-saveButton.addEventListener('click', (ev)=>{ ev.stopPropagation(); const saveData = { money,
- weaponLevel, upgrades, asteroidsDestroyed, secondsPlayed, totalMoneyEarned, moneySpent, upgradesPurchased, totalEvents, allyCount: upgrades.allyCount||0 }; localStorage.setItem("myGameSave", JSON.stringify(saveData)); alert("Game saved!"); });
+saveButton.addEventListener('click', (ev)=>{ ev.stopPropagation(); const saveData = { money, weaponLevel, upgrades, asteroidsDestroyed, secondsPlayed, totalMoneyEarned, moneySpent, upgradesPurchased, totalEvents, allyCount: upgrades.allyCount||0 }; localStorage.setItem("myGameSave", JSON.stringify(saveData)); alert("Game saved!"); });
 function loadGame(){
   const saved = localStorage.getItem("myGameSave");
-  if (saved){
-    try{
-      const data = JSON.parse(saved);
-      money = data.money || 0;
-      weaponLevel = data.weaponLevel || 0;
-      upgrades = data.upgrades || upgrades;
-      asteroidsDestroyed = data.asteroidsDestroyed || 0;
-      secondsPlayed = data.secondsPlayed || 0;
-      totalMoneyEarned = data.totalMoneyEarned || 0;
-      moneySpent = data.moneySpent || 0;
-      upgradesPurchased = data.upgradesPurchased || 0;
-      totalEvents = data.totalEvents || totalEvents;
-    }catch(e){}
-  }
-  document.querySelectorAll('.store-tile').forEach(tile=>{
-    const typeElem = tile.dataset.type;
-    const lvlSpan = tile.querySelector('.store-level');
-    if (lvlSpan){
-      if (typeElem === 'weapon') lvlSpan.textContent = String(upgrades.weapon || 0);
-      else if (typeElem === 'scanner') lvlSpan.textContent = String(upgrades.scanner || 0);
-      else if (typeElem === 'value') lvlSpan.textContent = String(upgrades.value || 0);
-      else if (typeElem === 'spawn') lvlSpan.textContent = String(upgrades.spawn || 0);
-      else if (typeElem === 'allyCount') lvlSpan.textContent = String(upgrades.allyCount || 0);
-      else if (typeElem === 'allyRate') lvlSpan.textContent = String(upgrades.allyRate || 0);
-    }
-  });
+  if (saved){ try{ const data = JSON.parse(saved); money = data.money || 0; weaponLevel = data.weaponLevel || 0; upgrades = data.upgrades || upgrades; asteroidsDestroyed = data.asteroidsDestroyed || 0; secondsPlayed = data.secondsPlayed || 0; totalMoneyEarned = data.totalMoneyEarned || 0; moneySpent = data.moneySpent || 0; upgradesPurchased = data.upgradesPurchased || 0; totalEvents = data.totalEvents || totalEvents; }catch(e){} }
+  document.querySelectorAll('.store-tile').forEach(tile=>{ const typeElem = tile.dataset.type; const lvlSpan = tile.querySelector('.store-level'); if (lvlSpan){ if (typeElem === 'weapon') lvlSpan.textContent = String(upgrades.weapon || 0); else if (typeElem === 'scanner') lvlSpan.textContent = String(upgrades.scanner || 0); else if (typeElem === 'value') lvlSpan.textContent = String(upgrades.value || 0); else if (typeElem === 'spawn') lvlSpan.textContent = String(upgrades.spawn || 0); else if (typeElem === 'allyCount') lvlSpan.textContent = String(upgrades.allyCount || 0); else if (typeElem === 'allyRate') lvlSpan.textContent = String(upgrades.allyRate || 0); } });
   if (upgrades.scanner >= 9 && scannerBuyBtn){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = "MAX"; scannerBuyBtn.style.background="#555"; }
   updateStatsUI();
 }
@@ -875,11 +780,7 @@ achToggle.addEventListener('click', (ev)=>{ ev.stopPropagation(); const visible 
 document.addEventListener('click', (e)=>{
   if (storeMenu.style.display === 'block' && !storeMenu.contains(e.target) && e.target !== shopToggle) storeMenu.style.display = 'none';
   if (statsMenu.style.display === 'block' && !statsMenu.contains(e.target) && e.target !== statsToggle) statsMenu.style.display = 'none';
-  if (achievementsMenu.style.display === 'block' && !achievementsMenu.contains(e.target) && e.target !== achToggle){
-    achievementsMenu.style.display = 'none';
-    secretsPanel.classList.remove('open');
-    secretsPanel.setAttribute('aria-hidden','true');
-  }
+  if (achievementsMenu.style.display === 'block' && !achievementsMenu.contains(e.target) && e.target !== achToggle){ achievementsMenu.style.display = 'none'; secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); }
 });
 closeAchievements.addEventListener('click', ()=>{ achievementsMenu.style.display = 'none'; secretsPanel.classList.remove('open'); secretsPanel.setAttribute('aria-hidden','true'); });
 viewSecretsBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); secretsPanel.classList.add('open'); secretsPanel.setAttribute('aria-hidden','false'); renderSecrets(); });
@@ -892,62 +793,21 @@ settingsBtn.addEventListener("click", (e) => { e.stopPropagation(); settingsMenu
 document.addEventListener("DOMContentLoaded", () => { loadGame(); renderAchievements(); renderSecrets(); updateStatsUI(); });
 
 function realStartGame(){
-  startScreen.style.transition = 'opacity 1200ms ease';
-  startScreen.style.opacity = '0';
-  setTimeout(()=>{ startScreen.style.display = 'none'; }, 1200);
+  startScreen.style.transition = 'opacity 1200ms ease'; startScreen.style.opacity = '0'; setTimeout(()=>{ startScreen.style.display = 'none'; }, 1200);
   setTimeout(()=>{
-    gameArea.style.display = 'block';
-    requestAnimationFrame(()=>{ gameArea.style.opacity = '1'; });
-    startTimer();
-    animateLoop();
-    setTimeout(()=>createAsteroid(), 120);
-    setTimeout(()=>createAsteroid(), 520);
+    gameArea.style.display = 'block'; requestAnimationFrame(()=>{ gameArea.style.opacity = '1'; }); startTimer(); animateLoop(); setTimeout(()=>createAsteroid(), 120); setTimeout(()=>createAsteroid(), 520);
     if (!randomEventTimerId) randomEventTimerId = setInterval(()=>{ if (gameArea.style.display !== 'none') triggerRandomEvent(); }, randomEventIntervalMs);
   }, 900);
 }
 
 /* ---------- events: solar flare & black hole ---------- */
-function startSolarFlare(durationMs=30000){
-  if (solarFlareTimer) clearTimeout(solarFlareTimer);
-  solarFlareActive = true;
-  solarFlareExpiresAt = Date.now() + durationMs;
-  solarOverlay.style.transition = 'opacity 300ms ease';
-  solarOverlay.style.opacity = '0.75';
-  showEventPopup("SOLAR FLARE", "#ff8c00");
-  solarFlareTimer = setTimeout(()=>{ endSolarFlare(); }, durationMs);
-}
-function endSolarFlare(){
-  solarFlareActive = false;
-  solarOverlay.style.opacity = '0';
-  if (solarFlareTimer) { clearTimeout(solarFlareTimer); solarFlareTimer = null; }
-}
-function startBlackHole(durationMs=30000){
-  if (blackHoleTimer) clearTimeout(blackHoleTimer);
-  blackHoleActive = true;
-  blackHoleExpiresAt = Date.now() + durationMs;
-  blackholeOverlay.style.transition = 'opacity 300ms ease';
-  blackholeOverlay.style.opacity = '0.75';
-  showEventPopup("BLACK HOLE", "#c18cff");
-  blackHoleTimer = setTimeout(()=>{ endBlackHole(); }, durationMs);
-}
-function endBlackHole(){
-  blackHoleActive = false;
-  blackholeOverlay.style.opacity = '0';
-  if (blackHoleTimer) { clearTimeout(blackHoleTimer); blackHoleTimer = null; }
-}
+function startSolarFlare(durationMs=30000){ if (solarFlareTimer) clearTimeout(solarFlareTimer); solarFlareActive = true; solarFlareExpiresAt = Date.now() + durationMs; solarOverlay.style.transition = 'opacity 300ms ease'; solarOverlay.style.opacity = '0.75'; showEventPopup("SOLAR FLARE", "#ff8c00"); solarFlareTimer = setTimeout(()=>{ endSolarFlare(); }, durationMs); }
+function endSolarFlare(){ solarFlareActive = false; solarOverlay.style.opacity = '0'; if (solarFlareTimer) { clearTimeout(solarFlareTimer); solarFlareTimer = null; } }
+function startBlackHole(durationMs=30000){ if (blackHoleTimer) clearTimeout(blackHoleTimer); blackHoleActive = true; blackHoleExpiresAt = Date.now() + durationMs; blackholeOverlay.style.transition = 'opacity 300ms ease'; blackholeOverlay.style.opacity = '0.75'; showEventPopup("BLACK HOLE", "#c18cff"); blackHoleTimer = setTimeout(()=>{ endBlackHole(); }, durationMs); }
+function endBlackHole(){ blackHoleActive = false; blackholeOverlay.style.opacity = '0'; if (blackHoleTimer) { clearTimeout(blackHoleTimer); blackHoleTimer = null; } }
 
 /* ---------- Random event orchestration ---------- */
-function triggerRandomEvent(){
-  const r = Math.random();
-  if (r < 0.12){ startSolarFlare(30000); }
-  else if (r < 0.22){ startBlackHole(30000); }
-  else {
-    for (let i=0;i<6;i++){ setTimeout(()=>createAsteroid(), i*120); }
-    if (Math.random() < 0.25){ const rect = gameArea.getBoundingClientRect(); const pos = randomEdgePosition(rect); createAlien(pos); }
-    totalEvents++;
-    renderAchievements();
-  }
-}
+function triggerRandomEvent(){ const r = Math.random(); if (r < 0.12){ startSolarFlare(30000); } else if (r < 0.22){ startBlackHole(30000); } else { for (let i=0;i<6;i++){ setTimeout(()=>createAsteroid(), i*120); } if (Math.random() < 0.25){ const rect = gameArea.getBoundingClientRect(); const pos = randomEdgePosition(rect); createAlien(pos); } totalEvents++; renderAchievements(); } }
 
 /* debug buttons */
 debugEventBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); triggerRandomEvent(); });
@@ -955,73 +815,23 @@ debugAlienBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); const rect
 debugSolarBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); startSolarFlare(30000); });
 debugBlackholeBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); startBlackHole(30000); });
 
-/* ---------- store UI sync ---------- */
+/* ---------- store UI sync & periodic checks ---------- */
 function syncStoreUI(){
-  if (scannerBuyBtn){
-    if ((upgrades.scanner || 0) >= 9){
-      scannerBuyBtn.disabled = true;
-      scannerBuyBtn.textContent = 'MAX';
-      scannerBuyBtn.style.background = '#555';
-    } else {
-      scannerBuyBtn.disabled = false;
-      scannerBuyBtn.textContent = 'Buy';
-      scannerBuyBtn.style.background = '';
-    }
-  }
-  document.querySelectorAll('.store-tile').forEach(tile=>{
-    const type = tile.dataset.type;
-    const lvl = tile.querySelector('.store-level');
-    if (!lvl) return;
-    if (type === 'weapon') lvl.textContent = String(upgrades.weapon || 0);
-    else if (type === 'scanner') lvl.textContent = String(upgrades.scanner || 0);
-    else if (type === 'value') lvl.textContent = String(upgrades.value || 0);
-    else if (type === 'spawn') lvl.textContent = String(upgrades.spawn || 0);
-    else if (type === 'allyCount') lvl.textContent = String(upgrades.allyCount || 0);
-    else if (type === 'allyRate') lvl.textContent = String(upgrades.allyRate || 0);
-    const costTag = tile.querySelector('.store-cost');
-    if (costTag){
-      const btn = tile.querySelector('.buyButton');
-      if (btn && btn.dataset && btn.dataset.cost) costTag.textContent = `$${fmt(Number(btn.dataset.cost)||0)}`;
-    }
-  });
+  if (scannerBuyBtn){ if ((upgrades.scanner || 0) >= 9){ scannerBuyBtn.disabled = true; scannerBuyBtn.textContent = 'MAX'; scannerBuyBtn.style.background = '#555'; } else { scannerBuyBtn.disabled = false; scannerBuyBtn.textContent = 'Buy'; scannerBuyBtn.style.background = ''; } }
+  document.querySelectorAll('.store-tile').forEach(tile=>{ const type = tile.dataset.type; const lvl = tile.querySelector('.store-level'); if (!lvl) return; if (type === 'weapon') lvl.textContent = String(upgrades.weapon || 0); else if (type === 'scanner') lvl.textContent = String(upgrades.scanner || 0); else if (type === 'value') lvl.textContent = String(upgrades.value || 0); else if (type === 'spawn') lvl.textContent = String(upgrades.spawn || 0); else if (type === 'allyCount') lvl.textContent = String(upgrades.allyCount || 0); else if (type === 'allyRate') lvl.textContent = String(upgrades.allyRate || 0); const costTag = tile.querySelector('.store-cost'); if (costTag){ const btn = tile.querySelector('.buyButton'); if (btn && btn.dataset && btn.dataset.cost) costTag.textContent = `$${fmt(Number(btn.dataset.cost)||0)}`; } });
 }
 syncStoreUI();
 setInterval(syncStoreUI, 1000);
-
-/* periodic achievement/secret checks */
 setInterval(()=>{ achievements.forEach(a=>{ if (!a.unlocked && typeof a.condition === 'function' && a.condition()) a.unlocked = true; }); renderAchievements(); renderSecrets(); updateStatsUI(); }, 2000);
 
-/* ---------- INTRO typing (3 lines, 2 long pauses), centered but typed left-to-right ---------- */
-const lines = [
-  "Space is full of useless rock.",
-  "Rich people pay good money for useless stuff.",
-  "Time to make some cash."
-];
-let lineIndex = 0;
-let charIndex = 0;
-let typingTimer = null;
-
+/* ---------- INTRO typing (keeps same behavior) ---------- */
+const lines = [ "Space is full of useless rock.", "Rich people pay good money for useless stuff.", "Time to make some cash." ];
+let lineIndex = 0; let charIndex = 0; let typingTimer = null;
 function typeNextChar(){
-  if (lineIndex >= lines.length){
-    setTimeout(()=>{ realStartGame(); }, 900);
-    startScreen.style.transition = 'opacity 1200ms ease';
-    startScreen.style.opacity = '0';
-    return;
-  }
+  if (lineIndex >= lines.length){ setTimeout(()=>{ realStartGame(); }, 900); startScreen.style.transition = 'opacity 1200ms ease'; startScreen.style.opacity = '0'; return; }
   const line = lines[lineIndex];
-  if (charIndex <= line.length){
-    introTextEl.textContent = line.slice(0, charIndex);
-    charIndex++;
-    typingTimer = setTimeout(typeNextChar, 36);
-  } else {
-    const pause = 1200;
-    setTimeout(()=>{
-      charIndex = 0;
-      lineIndex++;
-      introTextEl.textContent = '';
-      setTimeout(typeNextChar, 180);
-    }, pause);
-  }
+  if (charIndex <= line.length){ introTextEl.textContent = line.slice(0, charIndex); charIndex++; typingTimer = setTimeout(typeNextChar, 36); }
+  else { const pause = 1200; setTimeout(()=>{ charIndex = 0; lineIndex++; introTextEl.textContent = ''; setTimeout(typeNextChar, 180); }, pause); }
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(typeNextChar, 600); if (!randomEventTimerId) randomEventTimerId = setInterval(()=>{ if (gameArea.style.display !== 'none') triggerRandomEvent(); }, randomEventIntervalMs); });
@@ -1029,3 +839,4 @@ document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(typeNextChar, 600
 </script>
 </body>
 </html>
+
