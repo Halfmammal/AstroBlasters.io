@@ -91,6 +91,30 @@
     padding:0;
     margin:0;
   }
+  
+  #achPopup {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 14px 22px;
+  background: rgba(60, 255, 120, 0.18);
+  border: 2px solid #3cff80;
+  border-radius: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #3cff80;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 12px rgba(0,255,120,0.9);
+  transition: opacity .25s ease, transform .45s ease;
+}
+#achPopup.show {
+  opacity: 1;
+  transform: translate(-50%, -110%);
+}
+
 
   /* Ally sprite - larger and without box artifacts */
   .ally{
@@ -249,8 +273,12 @@
       </div>
     </div>
 
-    <div id="moneyDisplay">Money: $0</div>
+        <div id="moneyDisplay">Money: $0</div>
     <div id="alienPopup" class="alien-popup" aria-hidden="true"></div>
+
+    <!-- Achievement popup (uses #achPopup CSS already in your stylesheet) -->
+    <div id="achPopup" aria-hidden="true"></div>
+
   </div>
 
   <!-- debug buttons -->
@@ -308,6 +336,15 @@ const themeSelect = document.getElementById('themeSelect');
 let money = 0, totalMoneyEarned = 0, moneySpent = 0, asteroidsDestroyed = 0, upgradesPurchased = 0, secondsPlayed = 0, totalEvents = 0;
 let upgrades = { weapon:0, scanner:0, value:0, spawn:0, allyCount:0, allyRate:0 };
 let weaponLevel = 0;
+  // ---------- alien / temp buff control (add near other globals) ----------
+let alienFrenzyTimeout = null;
+let alienFrenzyActiveUntil = 0;
+
+// multipliers that the rest of the game will read (defaults = 1)
+let tempDamageMultiplier = 1;
+let tempSpawnMultiplier = 1;
+let tempAllyRateMultiplier = 1;
+
 
 const BASE_SPAWN_PROB = 0.18;
 const BASE_SPAWN_INTERVAL_MS = 1200;
@@ -317,12 +354,14 @@ let spawnTimer = null;
 let isPaused = false;
 
 let ALIEN_SPAWN_CHANCE = 0.005;
-let randomEventIntervalMs = 300000;
+let randomEventIntervalMs = 60000;
 let randomEventTimerId = null;
 
 let allyShips = [];
-let allyShotSpeed = 512;
-function allyShotsPerSecond(){ return 0.5 * (1 + (upgrades.allyRate || 0) * 0.5) * (allyBuffMultiplier || 1); }
+let allyShotSpeed = 14;
+function allyShotsPerSecond(){
+  return 0.5 * (1 + (upgrades.allyRate || 0) * 0.5) * (allyBuffMultiplier || 1) * (tempAllyRateMultiplier || 1);
+}
 
 let allyBuffMultiplier = 1, allyBuffExpiresAt = 0, tempAlienBuffTimeout = null;
 
@@ -352,13 +391,93 @@ const achievements = [
   { id: 'ach7', title: 'Engineer', desc: 'Purchase 5 upgrades total.', reward: 25, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>upgradesPurchased>=5 },
   { id: 'ach8', title: 'Collector', desc: 'Earn $100 total.', reward: 25, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>totalMoneyEarned>=100 },
   { id: 'ach9', title: 'Tycoon', desc: 'Earn $500 total.', reward: 50, unlocked:false, claimed:false, hiddenTitle:true, condition:()=>totalMoneyEarned>=500 },
-  { id: 'ach10', title: 'Marathon Pilot', desc: 'Play for 5 minutes.', reward: 15, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>secondsPlayed>=300 }
+  { id: 'ach10', title: 'Marathon Pilot', desc: 'Play for 5 minutes.', reward: 15, unlocked:false, claimed:false, hiddenTitle:false, condition:()=>secondsPlayed>=300 },
+    { id: 'ach11', title: 'Precision Pilot', desc: 'Destroy 3 asteroids in under 5 seconds.', reward: 20, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> {
+        const now = Date.now();
+        const recent = recentKillsTimestamps.filter(t => now - t <= 5000);
+        return recent.length >= 3;
+    }
+  },
+
+  { id: 'ach12', title: 'Speed Miner', desc: 'Destroy 10 asteroids in 30 seconds.', reward: 35, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> {
+        const now = Date.now();
+        const recent = recentKillsTimestamps.filter(t => now - t <= 30000);
+        return recent.length >= 10;
+    }
+  },
+
+  { id: 'ach13', title: 'Big Earner', desc: 'Hold at least $250 at once.', reward: 40, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> money >= 250 },
+
+  { id: 'ach14', title: 'Wealth Overflow', desc: 'Hold $1000 at once.', reward: 75, unlocked:false, claimed:false,
+    hiddenTitle:true, condition:()=> money >= 1000 },
+
+  { id: 'ach15', title: 'Fleet Commander', desc: 'Own 3 ally ships.', reward: 50, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> upgrades.allyCount >= 3 },
+
+  { id: 'ach16', title: 'Rapid Response Unit', desc: 'Reach 2 shots/sec from allies.', reward: 55, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> allyShotsPerSecond() >= 2 },
+
+  { id: 'ach17', title: 'The Grinder', desc: 'Destroy 200 total asteroids.', reward: 90, unlocked:false, claimed:false,
+    hiddenTitle:true, condition:()=> asteroidsDestroyed >= 200 },
+
+  { id: 'ach18', title: 'Cosmic Tycoon', desc: 'Earn $2500 total.', reward: 120, unlocked:false, claimed:false,
+    hiddenTitle:true, condition:()=> totalMoneyEarned >= 2500 },
+
+  { id: 'ach19', title: 'Event Horizon', desc: 'Trigger 10 random events.', reward: 70, unlocked:false, claimed:false,
+    hiddenTitle:false, condition:()=> totalEvents >= 10 },
+
+  { id: 'ach20', title: 'Master Collector', desc: 'Claim 5 secrets.', reward: 100, unlocked:false, claimed:false,
+    hiddenTitle:true, condition:()=> secrets.filter(s=>s.collected).length >= 5 }
+
 ];
 
 const secrets = [
   { id:'s1', name:'First Light', revealed:false, collected:false, hint:'Destroy your first asteroid', reward:12, unlockReason:'first_asteroid', image:'🪨' },
   { id:'s2', name:'Forged in Fire', revealed:false, collected:false, hint:'Buy your first upgrade', reward:15, unlockReason:'first_upgrade', image:'☄️' },
-  { id:'s3', name:'Alien Relic', revealed:false, collected:false, hint:'Click a rare alien saucer', reward:50, unlockReason:'alien_clicked', image:'👽' }
+  { id:'s3', name:'Alien Relic', revealed:false, collected:false, hint:'Click a rare alien saucer', reward:50, unlockReason:'alien_clicked', image:'👽' },   
+  { id:'s4', name:'Silent Echo', revealed:false, collected:false,
+    hint:'Remain completely idle for 45 seconds.', 
+    reward:20, unlockReason:'idle_long', image:'🔇' },
+
+  { id:'s5', name:'Ghost Click', revealed:false, collected:false,
+    hint:'Click an empty area 100 times.', 
+    reward:25, unlockReason:'empty_click_spam', image:'👻' },
+
+  { id:'s6', name:'Void Whisper', revealed:false, collected:false,
+    hint:'Open the achievements panel 10 times in one session.', 
+    reward:30, unlockReason:'achievements_spam', image:'🌫️' },
+
+  { id:'s7', name:'The Hidden Merchant', revealed:false, collected:false,
+    hint:'Open and close the shop 20 times.', 
+    reward:35, unlockReason:'shop_spam', image:'🛒' },
+
+  { id:'s8', name:'Quiet Wealth', revealed:false, collected:false,
+    hint:'Reach exactly $66 money at any moment.', 
+    reward:50, unlockReason:'money_66', image:'💵' },
+
+  { id:'s9', name:'Spectral Miner', revealed:false, collected:false,
+    hint:'Destroy an asteroid within 0.15 seconds of it spawning.', 
+    reward:60, unlockReason:'insta_kill', image:'✨' },
+
+  { id:'s10', name:'The Observer', revealed:false, collected:false,
+    hint:'Keep the stats page open for 30 seconds straight.', 
+    reward:45, unlockReason:'stats_watch', image:'🪞' },
+
+  { id:'s11', name:'Galactic Pattern', revealed:false, collected:false,
+    hint:'Destroy asteroids in the order: Red → Blue → Yellow → Green → Violet.', 
+    reward:90, unlockReason:'color_sequence', image:'🔷' },
+
+  { id:'s12', name:'Whispers of the Rift', revealed:false, collected:false,
+    hint:'Trigger 3 black hole events in one session.', 
+    reward:70, unlockReason:'bh_triple', image:'🌀' },
+
+  { id:'s13', name:'The Secret Clicker', revealed:false, collected:false,
+    hint:'Click the main menu title 25 times.', 
+    reward:40, unlockReason:'title_spam', image:'🎯' }
+
 ];
 
 let recentKillsTimestamps = [];
@@ -384,7 +503,11 @@ function renderAchievements(){
   achievementsList.innerHTML = '';
   achievements.forEach(a=>{
     // evaluate unlock
-    if (!a.unlocked && typeof a.condition === 'function' && a.condition()) a.unlocked = true;
+    if (!a.unlocked && typeof a.condition === 'function' && a.condition()) {
+    a.unlocked = true;
+    showAchievementPopup("Achievement Unlocked!");
+}
+
 
     const card = document.createElement('div'); card.className = 'achievement-card';
     if (!a.unlocked && a.hiddenTitle) card.classList.add('locked');
@@ -444,6 +567,17 @@ function maybeUnlockSecret(trigger){
   if (trigger === 'purchase' || trigger === 'first_upgrade'){ if (!secrets[1].revealed) revealSecretById('s2','Forged in Fire'); }
   if (trigger === 'first_asteroid'){ if (!secrets[0].revealed) revealSecretById('s1','First Light'); }
   if (trigger === 'alien_clicked'){ if (!secrets[2].revealed) revealSecretById('s3','Alien Relic'); }
+    if (trigger === 'idle_long') revealSecretById('s4','Silent Echo');
+  if (trigger === 'empty_click_spam') revealSecretById('s5','Ghost Click');
+  if (trigger === 'achievements_spam') revealSecretById('s6','Void Whisper');
+  if (trigger === 'shop_spam') revealSecretById('s7','The Hidden Merchant');
+  if (trigger === 'money_66') revealSecretById('s8','Quiet Wealth');
+  if (trigger === 'insta_kill') revealSecretById('s9','Spectral Miner');
+  if (trigger === 'stats_watch') revealSecretById('s10','The Observer');
+  if (trigger === 'color_sequence') revealSecretById('s11','Galactic Pattern');
+  if (trigger === 'bh_triple') revealSecretById('s12','Whispers of the Rift');
+  if (trigger === 'title_spam') revealSecretById('s13','The Secret Clicker');
+
 }
 
 /* ---------- visuals mapping for scanner ---------- */
@@ -532,16 +666,19 @@ function hpForBase(baseHp){
   return Math.max(1, Math.round(baseHp * valueMult));
 }
 
-/* weapon damage scaling: 1.5x per weapon upgrade */
 function getPlayerDamage(){
   const baseDamage = 1;
   const mult = Math.pow(1.5, Math.max(0, upgrades.weapon || 0));
-  return Math.max(1, Math.ceil(baseDamage * mult));
+  // include temporary damage multiplier from alien frenzy
+  return Math.max(1, Math.ceil(baseDamage * mult * (tempDamageMultiplier || 1)));
 }
+
 
 /* event state */
 let solarFlareActive = false, solarFlareExpiresAt = 0, solarFlareTimer = null;
 let blackHoleActive = false, blackHoleExpiresAt = 0, blackHoleTimer = null;
+  
+
 
 /* show event popup */
 function showEventPopup(text, color='#fff'){
@@ -551,6 +688,79 @@ function showEventPopup(text, color='#fff'){
   alienPopup.setAttribute('aria-hidden','false');
   setTimeout(()=>{ alienPopup.classList.remove('show'); alienPopup.setAttribute('aria-hidden','true'); }, 1600);
 }
+  
+function showAchievementPopup(text){
+  const el = document.getElementById('achPopup');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 1800);
+}
+
+
+function createBlackHoleVisual() {
+  // If already present, update size and ensure visible
+  let bh = document.getElementById('blackHoleVisual');
+  if (!bh) {
+    bh = document.createElement('img');
+    bh.id = 'blackHoleVisual';
+    bh.src = 'BlackHole.png';
+    bh.style.position = 'absolute';
+    bh.style.pointerEvents = 'none';
+    bh.style.zIndex = '10'; // behind asteroids (asteroids use z-index:20)
+    bh.style.transition = 'opacity 300ms ease, transform 300ms ease';
+    bh.style.opacity = '0';
+    bh.style.transform = 'scale(0.95)';
+    // append to gameArea
+    gameArea.appendChild(bh);
+  }
+
+  // position and size it, then fade in
+  updateBlackHoleVisualSize();
+  // small delay so CSS transition applies
+  requestAnimationFrame(() => {
+    bh.style.opacity = '0.95';
+    bh.style.transform = 'scale(1)';
+  });
+
+  // ensure resize keeps it centered & sized
+  if (!createBlackHoleVisual._resizeBound) {
+    createBlackHoleVisual._resizeBound = true;
+    window.addEventListener('resize', updateBlackHoleVisualSize);
+  }
+}
+
+function updateBlackHoleVisualSize() {
+  const bh = document.getElementById('blackHoleVisual');
+  if (!bh) return;
+  const rect = gameArea.getBoundingClientRect();
+  // choose width as fraction of gameArea width with a max limit
+  const width = Math.min(rect.width * 0.55, 520); // tweak max if you like
+  const height = 'auto';
+  bh.style.width = `${Math.round(width)}px`;
+  bh.style.height = height;
+  // center it inside gameArea (gameArea is positioned relative)
+  // left/top calculated relative to gameArea content box
+  bh.style.left = `calc(50% - ${Math.round(width/2)}px)`;
+  // position vertically so the hole is roughly centered (tweak if desired)
+  bh.style.top  = `calc(50% - ${Math.round(width/2)}px)`;
+}
+
+function removeBlackHoleVisual() {
+  const bh = document.getElementById('blackHoleVisual');
+  if (!bh) return;
+  // fade out, then remove
+  bh.style.opacity = '0';
+  bh.style.transform = 'scale(0.95)';
+  setTimeout(() => { if (bh && bh.remove) bh.remove(); }, 340);
+  // optionally remove resize listener (keeps code tidy)
+  if (createBlackHoleVisual._resizeBound) {
+    window.removeEventListener('resize', updateBlackHoleVisualSize);
+    createBlackHoleVisual._resizeBound = false;
+  }
+}
+/* ---------------- end Black Hole helpers ---------------- */
+
 
 /* ---------- asteroid creation & click handling ---------- */
 function pickDisplayLevelForSpawn(){
@@ -686,20 +896,70 @@ function createAlien(pos){
 }
 function handleAlienClick(){
   totalEvents++;
+
+  // 50/50 outcome
   const giveCash = Math.random() < 0.5;
+
   if (giveCash){
+    // compute the highest scanner-level asteroid you have unlocked (scanner level + 1)
     const highestUnlocked = Math.min(9, (upgrades.scanner || 0) + 1);
     const idx = Math.max(1, highestUnlocked) - 1;
     const baseReward = ASTEROID_TYPES[idx] ? ASTEROID_TYPES[idx].reward : ASTEROID_TYPES[0].reward;
-    const amount = Math.round(5 * payoutForBase(baseReward));
-    money += amount; totalMoneyEarned += amount;
+    const amount = Math.round(5 * payoutForBase(baseReward)); // 5x base payout, value upgrades already considered by payoutForBase
+    money += amount;
+    totalMoneyEarned += amount;
     updateStatsUI();
-    showEventPopup("ALIEN CASH","#00ff6a");
-  } else {
-    applyAllyBuff(10, 10000);
-    showEventPopup("ALIEN WEAPON SURGE","#00ff6a");
+    showEventPopup("ALIEN CASH", "#00ff6a");
+    return;
   }
+
+  // ALIEN WEAPON FRENZY path
+  const DURATION_MS = 10000; // 10 seconds
+
+  // Clear any previous frenzy so we can restart cleanly
+  if (alienFrenzyTimeout){
+    clearTimeout(alienFrenzyTimeout);
+    alienFrenzyTimeout = null;
+  }
+
+  // Save previous multipliers if you want to (we revert by resetting to 1)
+  tempDamageMultiplier = 5;      // player clicking damage ×5
+  tempSpawnMultiplier = 5;       // spawn rate ×5
+  tempAllyRateMultiplier = 10;   // ally fire rate ×10
+
+  // Mark expiry time for other code to consult if needed
+  alienFrenzyActiveUntil = Date.now() + DURATION_MS;
+
+  // Update UI and systems that depend on these multipliers:
+  // - updateStatsUI will display the damage via getPlayerDamage (now multiplied)
+  updateStatsUI();
+  // - restart ally firing intervals to apply the new ally rate multiplier
+  updateAlliesFiringRate();
+
+  // temporarily shorten spawn timer tick behavior if you want immediate effect (optional)
+  // but the spawn probability already uses tempSpawnMultiplier, so next tick will reflect it.
+
+  showEventPopup("ALIEN WEAPON SURGE", "#00ff6a");
+
+  // spawn some aggressive asteroids as a visual / mechanical push
+  for (let i=0;i<8;i++){
+    setTimeout(()=>{ createAsteroid(); }, i * 80);
+  }
+
+  alienFrenzyTimeout = setTimeout(()=>{
+    // revert multipliers
+    tempDamageMultiplier = 1;
+    tempSpawnMultiplier = 1;
+    tempAllyRateMultiplier = 1;
+    alienFrenzyActiveUntil = 0;
+    alienFrenzyTimeout = null;
+
+    // restore ally rates
+    updateAlliesFiringRate();
+    updateStatsUI();
+  }, DURATION_MS);
 }
+
 
 /* ---------- allies ---------- */
 function spawnAllies(){
@@ -831,7 +1091,7 @@ function startTimer(){
     secondsPlayed++; updateStatsUI();
     const scannerFactor = 1 + (0.12 * (upgrades.scanner || 0));
     const spawnFactor = 1 + (0.35 * (upgrades.spawn || 0));
-    const effectiveSpawnProb = Math.min(0.95, BASE_SPAWN_PROB * scannerFactor * spawnFactor);
+    const effectiveSpawnProb = Math.min(0.95, BASE_SPAWN_PROB * scannerFactor * spawnFactor * (tempSpawnMultiplier || 1));
     maxActive = Math.max(DEFAULT_MAX_ACTIVE, DEFAULT_MAX_ACTIVE + (upgrades.spawn || 0) * 2);
     const spawnsThisTick = (Date.now() < allyBuffExpiresAt) ? 2 + Math.floor(Math.random()*3) : 1;
     if (Math.random() < effectiveSpawnProb){
@@ -1150,6 +1410,7 @@ function endSolarFlare(){
 }
 function startBlackHole(durationMs=30000){
   if (blackHoleTimer) clearTimeout(blackHoleTimer);
+  createBlackHoleVisual();
   blackHoleActive = true;
   blackHoleExpiresAt = Date.now() + durationMs;
   blackholeOverlay.style.transition = 'opacity 300ms ease';
@@ -1158,6 +1419,7 @@ function startBlackHole(durationMs=30000){
   blackHoleTimer = setTimeout(()=>{ endBlackHole(); }, durationMs);
 }
 function endBlackHole(){
+  removeBlackHoleVisual();
   blackHoleActive = false;
   blackholeOverlay.style.opacity = '0';
   if (blackHoleTimer) { clearTimeout(blackHoleTimer); blackHoleTimer = null; }
@@ -1253,6 +1515,8 @@ function typeNextChar(){
 
 document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(typeNextChar, 600); if (!randomEventTimerId) randomEventTimerId = setInterval(()=>{ if (gameArea.style.display !== 'none') triggerRandomEvent(); }, randomEventIntervalMs); });
 
+
+  
 </script>
 </body>
 </html>
