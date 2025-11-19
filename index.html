@@ -153,6 +153,16 @@
         <button id="saveButton" class="menuButton">Save</button>
         <button id="pauseButton" class="menuButton">Pause</button>
         <button id="restartButton" class="menuButton">Restart</button>
+                <!-- Theme Selector (added inside settings) -->
+        <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+          <label for="themeSelect" style="font-size:13px; color:#ccc;">Background Theme:</label>
+          <select id="themeSelect" style="padding:4px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">
+            <option value="default">Default</option>
+            <option value="nebula2">Nebula 2</option>
+            <option value="starryNight">Starry Night</option>
+            <option value="solarSystem">Solar System</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -293,6 +303,7 @@ const debugBlackholeBtn = document.getElementById('debugBlackholeBtn');
 const scannerBuyBtn = document.getElementById('scannerBuyBtn');
 const solarOverlay = document.getElementById('solarOverlay');
 const blackholeOverlay = document.getElementById('blackholeOverlay');
+const themeSelect = document.getElementById('themeSelect');
 
 let money = 0, totalMoneyEarned = 0, moneySpent = 0, asteroidsDestroyed = 0, upgradesPurchased = 0, secondsPlayed = 0, totalEvents = 0;
 let upgrades = { weapon:0, scanner:0, value:0, spawn:0, allyCount:0, allyRate:0 };
@@ -451,6 +462,47 @@ function getScannerVisual(level){
   const lvl = Math.max(1, Math.min(9, Number(level) || 1));
   return map[lvl] || map[1];
 }
+
+/* ------------------- Themes --------------*/
+
+/* Theme apply/load logic */
+function applyTheme(theme) {
+    // This only changes the gameArea background so existing UI remains untouched
+    switch (theme) {
+        case "nebula2":
+            gameArea.style.backgroundImage = "url('nebula.png')";
+            break;
+        case "starryNight":
+            gameArea.style.backgroundImage = "url('StarryNight.png')";
+            break;
+        case "solarSystem":
+            gameArea.style.backgroundImage = "url('Galaxy.png')";
+            break;
+        default:
+            gameArea.style.backgroundImage = "url('stockSpaceBackground.jpg')";
+            break;
+    }
+    gameArea.style.backgroundSize = "cover";
+    gameArea.style.backgroundRepeat = "no-repeat";
+}
+
+/* Theme dropdown wiring */
+if (themeSelect){
+  // Load saved theme on page load
+  document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme") || "default";
+      applyTheme(savedTheme);
+      try { themeSelect.value = savedTheme; } catch(e){}
+  });
+
+  // When dropdown changes theme
+  themeSelect.addEventListener("change", () => {
+      const theme = themeSelect.value;
+      applyTheme(theme);
+      localStorage.setItem("theme", theme);
+  });
+}
+
 
 /* ---------- spawn helpers ---------- */
 function randomEdgePosition(rect){
@@ -884,7 +936,7 @@ secretsState: secrets.map(s => ({
       upgradesPurchased = data.upgradesPurchased || 0;
       totalEvents = data.totalEvents || totalEvents;
 
-      // Restore shop
+      
       if (data.shop) {
         data.shop.forEach(savedBtn => {
           const btn = document.querySelector(`.buyButton[data-type="${savedBtn.type}"]`);
@@ -895,7 +947,7 @@ secretsState: secrets.map(s => ({
         });
       }
 
-      // ⭐ Restore achievements
+  
       if (data.achievementsState) {
         data.achievementsState.forEach(savedA => {
           const a = achievements.find(x => x.id === savedA.id);
@@ -906,7 +958,7 @@ secretsState: secrets.map(s => ({
         });
       }
 
-      // ⭐ Restore secrets
+      
       if (data.secretsState) {
         data.secretsState.forEach(savedS => {
           const s = secrets.find(x => x.id === savedS.id);
@@ -942,7 +994,7 @@ secretsState: secrets.map(s => ({
 
   updateStatsUI();
 
-  // ⭐ Update achievements & secrets UI
+  
   renderAchievements();
   renderSecrets();
   spawnAllies();
@@ -962,9 +1014,9 @@ confirmRestartNo.addEventListener("click", () => {
 confirmRestartYes.addEventListener("click", () => {
   performFullRestart();
 });
-
+ // ------------------------- Restart
 function performFullRestart() {
-  // Reset ALL state
+  
   money = 0;
   totalMoneyEarned = 0;
   moneySpent = 0;
@@ -973,7 +1025,6 @@ function performFullRestart() {
   secondsPlayed = 0;
   totalEvents = 0;
 
-  // Reset upgrades (base levels)
   upgrades = { 
     weapon:0,      // weapon must start at 0
     scanner:0,     // base scanner
@@ -984,7 +1035,6 @@ function performFullRestart() {
   };
   weaponLevel = 0;
 
-  // ⭐⭐⭐ RESET SHOP PRICES & PURCHASE COUNTERS — THIS FIXES EVERYTHING
   document.querySelector('.buyButton[data-type="weapon"]').dataset.cost = 10;
   document.querySelector('.buyButton[data-type="scanner"]').dataset.cost = 15;
   document.querySelector('.buyButton[data-type="value"]').dataset.cost = 25;
@@ -992,59 +1042,47 @@ function performFullRestart() {
   document.querySelector('.buyButton[data-type="allyCount"]').dataset.cost = 80;
   document.querySelector('.buyButton[data-type="allyRate"]').dataset.cost = 60;
 
-  // Reset all purchase counters
   document.querySelectorAll('.buyButton').forEach(btn => {
     btn.dataset.purchases = 0;
   });
-  // ⭐⭐⭐ END OF SHOP RESET FIX
 
-
-  // Reset achievements
   achievements.forEach(a => {
     a.unlocked = false;
     a.claimed = false;
   });
 
-  // Reset secrets
   secrets.forEach(s => {
     s.revealed = false;
     s.collected = false;
   });
 
-  // Remove all asteroids/aliens/shots
   activeMap.forEach(ent => {
     if (ent.el && ent.el.remove) ent.el.remove();
   });
   activeMap.clear();
 
-  // Remove ally ships
   allyShips.forEach(a => { 
     if (a.el) a.el.remove(); 
     clearInterval(a.fireIntervalId);
   });
   allyShips = [];
-
-  // Reset UI
   updateStatsUI();
   renderAchievements();
   renderSecrets();
   syncStoreUI();
 
-  // Re-enable scanner button
   if (scannerBuyBtn) {
     scannerBuyBtn.disabled = false;
     scannerBuyBtn.textContent = "Buy";
     scannerBuyBtn.style.background = "";
   }
 
-  // Restart timers
   isPaused = false;
   pauseButton.textContent = "Pause";
 
   if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
   startTimer();
 
-  // Spawn two starter asteroids like normal
   setTimeout(() => createAsteroid(), 300);
   setTimeout(() => createAsteroid(), 600);
 
